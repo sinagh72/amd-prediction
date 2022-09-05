@@ -85,8 +85,8 @@ for m in mon:
     # slen = 57
     # slen = max(Seq_len_test)
     print('max #visit: ', slen)
-    X_test = pad_sequences(patients_vec_test, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_test = pad_sequences(patients_label_test, slen, padding='pre', truncating='pre', value=2.)
+    X_test = pad_sequences(patients_vec_test, slen, padding='post', truncating='post', value=0, dtype='float32')
+    Y_test = pad_sequences(patients_label_test, slen, padding='post', truncating='post', value=2.)
 
     Y_categorical_test = k.utils.np_utils.to_categorical(Y_test, 3)
     Y_categorical_test = Y_categorical_test.reshape(Y_test.shape[0], Y_test.shape[1], 3)
