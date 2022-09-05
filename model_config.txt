@@ -1,0 +1,2 @@
+m1: default settings. As it was implemented by the author
+m2: post padding, new augmentation method
