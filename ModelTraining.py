@@ -148,11 +148,11 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     print('Slen: ' + str(slen))
 
     X_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
-    X_train = pad_sequences(X_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
+    X_train = pad_sequences(X_train_aug, slen, padding='post', truncating='post', value=0, dtype='float32')
+    Y_train = pad_sequences(y_train_aug, slen, padding='post', truncating='post', value=2.)
 
-    X_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
+    X_val = pad_sequences(patients_vec_val, slen, padding='post', truncating='post', value=0, dtype='float32')
+    Y_val = pad_sequences(patients_label_val, slen, padding='post', truncating='post', value=2.)
 
     Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
     Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
@@ -202,7 +202,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     # bestmodel.load_weights(latest_file)
 
     bestmodel = model
-    model_filename = 'OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+    model_filename = 'models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
 
     bestmodel.save(model_filename)
     print('Model saved!!: ', model_filename)
