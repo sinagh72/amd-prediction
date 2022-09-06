@@ -102,13 +102,13 @@ def focal_loss(gamma=2., alpha=.25):
 def create_model(slen, num_features, n):
     model = Sequential()
 
-    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=True, input_shape=(slen, num_features),
+    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=False, input_shape=(slen, num_features),
                    name='lstm_1'))
     # model.add(BatchNormalization(mode=0))
     model.add(BatchNormalization())
     # model.add(LSTM(1000, return_sequences=True, activation='sigmoid', name='LSTM_2'))
     model.add(Dropout(0.2, name='dropout'))
-    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=True, name='lstm_2'))
+    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=False, name='lstm_2'))
     # model.add(Dropout(0.2))
     # model.add(LSTM(25, return_sequences=True, activation='sigmoid', name='LSTM_3'))
     # model.add(Activation("relu", name = 'Relu_activation'))
