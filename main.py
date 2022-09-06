@@ -12,19 +12,19 @@ TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outc
 
 df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
-df_cov[df_cov['Fold number'] == 2]['Fold number'] = 1
+df_cov.loc[df_cov['Fold number'] == 2, 'Fold number'] = 1
 
-df_cov[df_cov['Fold number'] == 3]['Fold number'] = 2
-df_cov[df_cov['Fold number'] == 4]['Fold number'] = 2
+df_cov.loc[df_cov['Fold number'] == 3, 'Fold number'] = 2
+df_cov.loc[df_cov['Fold number'] == 4, 'Fold number'] = 2
 
-df_cov[df_cov['Fold number'] == 5]['Fold number'] = 3
-df_cov[df_cov['Fold number'] == 6]['Fold number'] = 3
+df_cov.loc[df_cov['Fold number'] == 5, 'Fold number'] = 3
+df_cov.loc[df_cov['Fold number'] == 6, 'Fold number'] = 3
 
-df_cov[df_cov['Fold number'] == 7]['Fold number'] = 4
-df_cov[df_cov['Fold number'] == 8]['Fold number'] = 4
+df_cov.loc[df_cov['Fold number'] == 7, 'Fold number'] = 4
+df_cov.loc[df_cov['Fold number'] == 8, 'Fold number'] = 4
 
-df_cov[df_cov['Fold number'] == 10]['Fold number'] = 5
-df_cov[df_cov['Fold number'] == 9]['Fold number'] = 5
+df_cov.loc[df_cov['Fold number'] == 10, 'Fold number'] = 5
+df_cov.loc[df_cov['Fold number'] == 9, 'Fold number'] = 5
 # df_miami = pd.read_excel(TEST_DATA_DIR)
 # df_miami = df_miami.fillna('N/A')
 
