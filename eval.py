@@ -94,7 +94,7 @@ for m in mon:
     y_test = Y_categorical_test
 
     # bestmodel = model
-    latest_file = 'OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
+    latest_file = 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
     num_features = X_test.shape[2]
 
     bestmodel = create_model(slen, num_features, best_combo[0])
