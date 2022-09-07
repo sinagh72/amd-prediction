@@ -5,6 +5,8 @@ import torch
 import os
 import pandas as pd
 import torch.nn.functional as F
+import torch.utils.data as data
+from adm_dataset import AMDDataset
 from data_prepration import training_data, dataaugmentation
 from keras_preprocessing.sequence import pad_sequences
 import numpy as np
@@ -34,24 +36,11 @@ def preprocess(df, month, fold):
     patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
     print("#val: ", len(patients_vec_val))
 
-    slen = max(max(Seq_len), max(Seq_len_val))
-
-    print('Slen: ' + str(slen))
-
     x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
-    x_train = torch.tensor([np.pad(x, [(0, slen - len(x)), (0, 0)], mode='constant', constant_values=0.0)
-                            for x in x_train_aug], dtype=torch.float32, device=cuda0)
-    y_train = torch.tensor([np.pad(x, (0, slen - len(x)), mode='constant', constant_values=2.0)
-                            for x in y_train_aug], dtype=torch.float32, device=cuda0)
-    y_train = F.one_hot(y_train, num_classes=-1)
 
-    x_val = torch.as_tensor([np.pad(x, [(0, slen - len(x)), (0, 0)], mode='constant', constant_values=0.0)
-                             for x in patients_vec_val], dtype=torch.float32, device=cuda0)
-    y_val = torch.as_tensor([np.pad(x, (0, slen - len(x)), mode='constant', constant_values=2.0)
-                             for x in patients_label_val], dtype=torch.float32, device=cuda0)
-    y_val = F.one_hot(y_val, num_classes=-1)
-
+    return x_train_aug, y_train_aug, Seq_len, patients_label_val, patients_label_val, Seq_len_val
     # print(X_train.shape)
+
     # print(Y_train.shape)
     #
     # X_val = torch.nn.utils.rnn.pad_sequence(patients_vec_val, slen, padding='pre', truncating='pre', value=0,
@@ -139,7 +128,20 @@ def preprocess(df, month, fold):
 df = load_data()
 folds = [1, 2, 3, 4, 5]
 mon = [3, 6, 9, 12, 15, 18, 21]
-preprocess(df, mon[0], folds[0])
+x_train, y_train, seq_train, x_val, y_val, seq_val = preprocess(df, mon[0], folds[0])
+slen = max(max(seq_train), max(seq_val))
+print('Slen: ' + str(slen))
+
+train_dataset = AMDDataset(x_train, y_train, seq_train, slen)
+val_dataset = AMDDataset(x_val, y_val, seq_val, slen)
+
+train_loader = data.DataLoader(train_dataset, batch_size=16, shuffle=True, drop_last=True, num_workers=4,
+                               pin_memory=True)
+val_loader = data.DataLoader(val_dataset, batch_size=16, shuffle=False, drop_last=False, num_workers=4)
+
+
+
+# test_dataset = AMDDataset()
 #  the sequence to the encoder (required)
 #     src = None
 #     # the sequence to the decoder (required).
