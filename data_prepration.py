@@ -62,15 +62,15 @@ def dataaugmentation(patients_vec, patients_label):
                 L.append(patients_label[i][k])
             new_patients_vec.append(T)
             new_patients_label.append(L)
-        # for j in range(len(patients_vec[i]) - 1):
-        #     l = len(patients_vec[i]) - j
-        #     T = []
-        #     L = []
-        #     for k in range(l):
-        #         T.append(patients_vec[i][k])
-        #         L.append(patients_label[i][k])
-        #     new_patients_vec.append(T)
-        #     new_patients_label.append(L)
+        for j in range(len(patients_vec[i]) - 1):
+            l = len(patients_vec[i]) - j
+            T = []
+            L = []
+            for k in range(l):
+                T.append(patients_vec[i][k])
+                L.append(patients_label[i][k])
+            new_patients_vec.append(T)
+            new_patients_label.append(L)
     return new_patients_vec, new_patients_label
 
 

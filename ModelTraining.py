@@ -148,11 +148,11 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     print('Slen: ' + str(slen))
 
     X_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
-    X_train = pad_sequences(X_train_aug, slen, padding='post', truncating='post', value=0, dtype='float32')
-    Y_train = pad_sequences(y_train_aug, slen, padding='post', truncating='post', value=2.)
+    X_train = pad_sequences(X_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
+    Y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
 
-    X_val = pad_sequences(patients_vec_val, slen, padding='post', truncating='post', value=0, dtype='float32')
-    Y_val = pad_sequences(patients_label_val, slen, padding='post', truncating='post', value=2.)
+    X_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
+    Y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
 
     Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
     Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
@@ -175,22 +175,22 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     try:
         wei = list(Y_train.reshape(X_train.shape[0] * slen))
         print('len weight: ', len(wei))
-        class_weights = class_weight.compute_class_weight('balanced',
-                                                          np.unique(wei),
-                                                          wei)
+        class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(wei), y=wei)
         weights = np.array([class_weights[0], class_weights[1], class_weights[2]])
     except:
         weights = np.array([1, 50, 0.1])
     print(weights)
     loss = weighted_categorical_crossentropy(weights)
+    # loss = categorical_focal_loss(alpha=.25, gamma=2)
     if flag == 1:
-        model.compile(loss=[categorical_focal_loss(alpha=.25, gamma=2)],
+        model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],
                       optimizer=optimizers.RMSprop(learning_rate=0.00001, rho=0.9, epsilon=1e-08, decay=1e-6))
     else:
-        model.compile(loss=[categorical_focal_loss(alpha=.25, gamma=2)],
+        model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],
                       optimizer=optimizers.Adam(learning_rate=0.001, decay=1e-6))
+
     history = model.fit(X_train, y_train,
                         batch_size=64,
                         epochs=100,
