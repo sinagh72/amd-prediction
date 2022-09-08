@@ -1,7 +1,7 @@
 import pandas as pd
 import pickle
 from ModelTraining import model_training, model_using
-
+from os.path import exists
 import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -39,6 +39,18 @@ FOLDS = [1, 2, 3, 4, 5]
 
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
+
+file_exists = exists("models")
+if not file_exists:
+    os.mkdir("models")
+
+file_exists = exists("CV_resultsv2")
+if not file_exists:
+    os.mkdir("CV_resultsv2")
+
+file_exists = exists("weights")
+if not file_exists:
+    os.mkdir("weights")
 
 for m in mon:
 

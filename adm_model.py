@@ -4,23 +4,11 @@ import pytorch_lightning as pl
 import torch
 import torch.optim as optim
 import numpy as np
+from torchmetrics import MetricCollection
+from torchmetrics import MetricCollection, Accuracy, Precision, Recall, MeanSquaredError
+import torch.nn as nn
 
-
-class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
-    def __init__(self, optimizer, warmup, max_iters):
-        self.warmup = warmup
-        self.max_num_iters = max_iters
-        super(CosineWarmupScheduler, self).__init__(optimizer)
-
-    def get_lr(self):
-        lr_factor = self.get_lr_factor(epoch=self.last_epoch)
-        return [base_lr * lr_factor for base_lr in self.base_lrs]
-
-    def get_lr_factor(self, epoch):
-        lr_factor = 0.5 * (1 + np.cos(np.pi * epoch / self.max_num_iters))
-        if epoch <= self.warmup:
-            lr_factor *= epoch * 1.0 / self.warmup
-        return lr_factor
+from transformer import CosineWarmupScheduler, TransformerEncoder, PositionalEncoding
 
 
 class AMDModel(pl.LightningModule):
@@ -30,6 +18,19 @@ class AMDModel(pl.LightningModule):
                  lr, warmup, max_iters,
                  dropout=0.0, input_dropout=0.0,
                  loss_func=None):
+        """
+        Inputs:
+            embed_dim - Hidden dimensionality of the input
+            model_dim - Hidden dimensionality to use inside the Transformer
+            num_classes - Number of classes to predict per sequence element
+            num_heads - Number of heads to use in the Multi-Head Attention blocks
+            num_layers - Number of encoder blocks to use.
+            lr - Learning rate in the optimizer
+            warmup - Number of warmup steps. Usually between 50 and 500
+            max_iters - Number of maximum iterations the model is trained for. This is needed for the CosineWarmup scheduler
+            dropout - Dropout to apply inside the model
+            input_dropout - Dropout to apply on the input features
+        """
         super(AMDModel, self).__init__()
         self.save_hyperparameters()
         self._create_model()
@@ -39,9 +40,9 @@ class AMDModel(pl.LightningModule):
         #                             Precision(num_classes=3, mdmc_reduce="samplewise"),
         #                             Recall(num_classes=3, mdmc_reduce="samplewise")])
 
-        metrics = MetricCollection([ConfusionMatrix(num_classes=3),
-                                    Accuracy(num_classes=3, average="weighted",
-                                             mdmc_reduce="global")])
+        metrics = MetricCollection([Precision(num_classes=3, average='weighted', ignore_index=2),
+                                    Recall(num_classes=3, average='weighted', ignore_index=2),
+                                    Accuracy(num_classes=3, average="weighted", ignore_index=2)])
 
         # metrics = MetricCollection([Accuracy(num_classes=3, average="weighted",
         #                                      mdmc_reduce="global")])
@@ -51,21 +52,56 @@ class AMDModel(pl.LightningModule):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def _create_model(self):
-        self.model = torch.nn.Transformer(d_model=self.hparams.d_model,
-                                          nhead=self.hparams.nhead,
-                                          num_encoder_layers=self.hparams.num_encoder_layers,
-                                          num_decoder_layers=self.hparams.num_decoder_layers,
-                                          dim_feedforward=self.hparams.dim_feedforward,
-                                          dropout=self.hparams.dropout,
-                                          activation=self.hparams.activation,
-                                          custom_encoder=self.hparams.custom_encoder,
-                                          custom_decoder=self.hparams.custom_decoder,
-                                          layer_norm_eps=self.hparams.layer_norm_eps,
-                                          batch_first=self.hparams.batch_first,
-                                          norm_first=self.hparams.norm_first)
+        # Input dim -> Model dim
+        self.input_net = nn.Sequential(
+            nn.Dropout(self.hparams.input_dropout),
+            nn.Linear(self.hparams.embed_dim, self.hparams.model_dim)
+        )
+        # Positional encoding for sequences
+        self.positional_encoding = PositionalEncoding(d_model=self.hparams.model_dim, dropout=self.hparams.dropout)
+        # Transformer
+        self.transformer = TransformerEncoder(num_layers=self.hparams.num_layers,
+                                              embed_dim=self.hparams.model_dim,
+                                              dim_feedforward=2 * self.hparams.model_dim,
+                                              num_heads=self.hparams.num_heads,
+                                              dropout=self.hparams.dropout)
+        # Output classifier per sequence element
+        self.output_net = nn.Sequential(
+            nn.Linear(self.hparams.model_dim, self.hparams.model_dim),
+            nn.LayerNorm(self.hparams.model_dim),
+            # nn.ReLU(inplace=True),
+            nn.GELU(),
+            nn.Dropout(self.hparams.dropout),
+            nn.Linear(self.hparams.model_dim, self.hparams.num_classes),
+        )
 
-    def forward(self, x):
-        self.model.forward(x)
+    def forward(self, x, mask=None, add_positional_encoding=True):
+        """
+        Inputs:
+            x - Input features of shape [Batch, SeqLen, input_dim]
+            mask - Mask to apply on the attention outputs (optional)
+            add_positional_encoding - If True, we add the positional encoding to the input.
+                                      Might not be desired for some tasks.
+        """
+        x = self.input_net(x)
+        if add_positional_encoding:
+            x = self.positional_encoding(x)
+        x = self.transformer(x, mask=mask)
+        x = self.output_net(x)
+        return x
+
+    @torch.no_grad()
+    def get_attention_maps(self, x, mask=None, add_positional_encoding=True):
+        """
+        Function for extracting the attention matrices of the whole Transformer
+        for a single batch.
+        Input arguments same as the forward pass.
+        """
+        x = self.input_net(x)
+        if add_positional_encoding:
+            x = self.positional_encoding(x)
+        attention_maps = self.transformer.get_attention_maps(x, mask=mask)
+        return attention_maps
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.lr)
@@ -79,61 +115,48 @@ class AMDModel(pl.LightningModule):
     def shared_step(self, batch, stage):
         x = batch["visit_seq"]
         y_true = batch["label"]
+        y_true_hot = batch["label_hot"]
 
         y_pred = self.forward(x)
 
         loss = self.loss_fn(y_true, y_pred)
 
+        if stage == "train":
+            output = self.train_metrics(y_pred, y_true)
+        elif stage == "valid":
+            output = self.valid_metrics(y_pred, y_true)
+        else:
+            output = self.test_metrics(y_pred, y_true)
 
-        tp, fp, fn, tn = smp.metrics.get_stats(o.long(), mask.long(), mode="multiclass")
+        log = {'loss': loss, f'{stage}_': output}
 
-        return {
-            "loss": loss,
-            "tp": tp,
-            "fp": fp,
-            "fn": fn,
-            "tn": tn,
-        }
+        self.log_dict(log, prog_bar=True)
 
-    def shared_epoch_end(self, outputs, stage):
-        # aggregate step metics
-        tp = torch.cat([x["tp"] for x in outputs])
-        fp = torch.cat([x["fp"] for x in outputs])
-        fn = torch.cat([x["fn"] for x in outputs])
-        tn = torch.cat([x["tn"] for x in outputs])
+        # return
 
-        # per image IoU means that we first calculate IoU score for each image
-        # and then compute mean over these scores
-        per_image_iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="micro-imagewise")
-
-        # dataset IoU means that we aggregate intersection and union over whole dataset
-        # and then compute IoU score. The difference between dataset_iou and per_image_iou scores
-        # in this particular case will not be much, however for dataset
-        # with "empty" images (images without target class) a large gap could be observed.
-        # Empty images influence a lot on per_image_iou and much less on dataset_iou.
-        dataset_iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="micro")
-
-        metrics = {
-            f"{stage}_per_image_iou": per_image_iou,
-            f"{stage}_dataset_iou": dataset_iou,
-        }
-
-        self.log_dict(metrics, prog_bar=True)
+    # def shared_epoch_end(self, outputs, stage):
+    #     # aggregate step metics
+    #     tp = torch.cat([x["tp"] for x in outputs])
+    #     fp = torch.cat([x["fp"] for x in outputs])
+    #     fn = torch.cat([x["fn"] for x in outputs])
+    #     tn = torch.cat([x["tn"] for x in outputs])
+    #
+    #     self.log_dict(metrics, prog_bar=True)
 
     def training_step(self, batch, batch_idx):
         return self.shared_step(batch, "train")
 
-    def training_epoch_end(self, outputs):
-        return self.shared_epoch_end(outputs, "train")
+    # def training_epoch_end(self, outputs):
+    #     return self.shared_epoch_end(outputs, "train")
 
     def validation_step(self, batch, batch_idx):
         return self.shared_step(batch, "valid")
 
-    def validation_epoch_end(self, outputs):
-        return self.shared_epoch_end(outputs, "valid")
+    # def validation_epoch_end(self, outputs):
+    #     return self.shared_epoch_end(outputs, "valid")
 
     def test_step(self, batch, batch_idx):
-        return self.shared_step(batch, "train")
+        return self.shared_step(batch, "test")
 
-    def test_epoch_end(self, outputs):
-        return self.shared_epoch_end(outputs, "test")
+    # def test_epoch_end(self, outputs):
+    #     return self.shared_epoch_end(outputs, "test")
