@@ -1,152 +1,173 @@
-import pickle
-
 import torch
-# import argparse
-import os
-import pandas as pd
+import math
+import torch.optim as optim
 import torch.nn.functional as F
-import torch.utils.data as data
-from adm_dataset import AMDDataset
-from data_prepration import training_data, dataaugmentation
-from keras_preprocessing.sequence import pad_sequences
+import torch.nn as nn
 import numpy as np
 
 
-def load_data():
-    base_dir = './data/'
-    train_data_dir = os.path.join(base_dir, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
-    df_cov = pd.read_excel(train_data_dir)
-    df_cov = df_cov.fillna('N/A')
-    return df_cov
+def scaled_dot_product(query, key, value, mask=None, dropout=None):
+    # d_k = query.size(-1)
+    d_k = query.size()[-1]
+    attn_logits = torch.matmul(query, key.transpose(-2, -1))
+    attn_logits = attn_logits / math.sqrt(d_k)
+    if mask is not None:
+        attn_logits = attn_logits.masked_fill(mask == 0, -9e15)
+    attention = F.softmax(attn_logits, dim=-1)
+    if dropout is not None:
+        attention = dropout(attention)
+    values = torch.matmul(attention, value)
+    return values, attention
 
 
-def preprocess(df, month, fold):
-    cuda0 = torch.device('cuda:0')
-    print('month:', month)
-    strm = 'Outcome at ' + str(month) + ' months'
-    df_train = df[df[strm] != 'N/A']
-    df_train = df_train.replace('N/A', 0, regex=True)
-    print("no of patient:", len(df_train['Patient number'].unique()))
-    train = df_train[df_train['Fold number'] % 5 != fold - 1]
-    train = train.reset_index(drop=True)
-    patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
-    print("#train: ", len(patients_vec_train))
-    val = df_train[df_train['Fold number'] % 5 == fold - 1]
-    val = val.reset_index(drop=True)
-    patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
-    print("#val: ", len(patients_vec_val))
+class MultiheadAttention(nn.Module):
+    def __init__(self, embed_dim, num_heads, dropout=0.1):
+        super(MultiheadAttention, self).__init__()
+        assert embed_dim % num_heads == 0, "Embedding dimension must be 0 modulo number of heads."
 
-    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
 
-    return x_train_aug, y_train_aug, Seq_len, patients_label_val, patients_label_val, Seq_len_val
-    # print(X_train.shape)
+        # Stack all weight matrices 1...h together for efficiency
+        # Note that in many implementations you see "bias=False" which is optional
+        self.qkv_proj = nn.Linear(embed_dim, 3 * embed_dim)
+        self.o_proj = nn.Linear(embed_dim, embed_dim)
 
-    # print(Y_train.shape)
-    #
-    # X_val = torch.nn.utils.rnn.pad_sequence(patients_vec_val, slen, padding='pre', truncating='pre', value=0,
-    #                                         dtype='float32')
-    # Y_val = torch.nn.utils.rnn.pad_sequence(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
-    #
-    # Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
-    # Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
-    # Y_categorical_val = k.utils.np_utils.to_categorical(Y_val, 3)
-    # Y_categorical_val = Y_categorical_val.reshape(Y_val.shape[0], Y_val.shape[1], 3)
-    #
-    # y_train = Y_categorical_train
-    # y_val = Y_categorical_val
+        self.dropout = nn.Dropout(p=dropout)
 
+        self._reset_parameters()
 
-# if __name__ == "__main__":
-# parser = argparse.ArgumentParser()
-# parser.parse_args()
-# parser.add_argument("-d", "--d_model", default=512, type=int,
-#                     help="the number of expected features in the encoder/decoder inputs")
-#
-# parser.add_argument("-nh", "--n_head", default=8, type=int,
-#                     help="the number of heads in the multiheadattention models (default=8)")
-#
-# parser.add_argument("-ne", "--num_encoder_layers", default=6, type=int,
-#                     help="the number of sub-encoder-layers in the encoder (default=6)")
-#
-# parser.add_argument("-nd", "--num_decoder_layers", default=6, type=int,
-#                     help="the number of sub-decoder-layers in the decoder (default=6)")
-#
-# parser.add_argument("-f", "--dim_feedforward", default=2048, type=int,
-#                     help="the dimension of the feedforward network model (default=2048)")
-#
-# parser.add_argument("-dr", "--dropout", default=0.1, type=float,
-#                     help="the dropout value (default=0.1)")
-#
-# parser.add_argument("-a", "--activation", default="relu", type=str, choices=["relu", "gelu"],
-#                     help="the activation function of encoder/decoder intermediate layer, "
-#                          "can be a string (“relu” or “gelu”) or a unary callable. Default: relu")
-#
-# parser.add_argument("-le", "--layer_norm_eps", default=1e-5, type=float,
-#                     help="the eps value in layer normalization components (default=1e-5)")
-#
-# parser.add_argument("-b", "--batch_first", action="store_true",
-#                     help="If True, then the input and output tensors are provided as (batch, seq, feature). "
-#                          "Default: False (seq, batch, feature)")
-#
-# parser.add_argument("-nf", "--norm_first", action="store_true",
-#                     help="if True, encoder and decoder layers will perform LayerNorms before other attention and "
-#                          "feedforward operations, otherwise after. Default: False (after)")
-#
-# args = parser.parse_args()
+    def _reset_parameters(self):
+        # Original Transformer initialization, see PyTorch documentation
+        nn.init.xavier_uniform_(self.qkv_proj.weight)
+        self.qkv_proj.bias.data.fill_(0)
+        nn.init.xavier_uniform_(self.o_proj.weight)
+        self.o_proj.bias.data.fill_(0)
 
-# d_model = args.d_model
-# nhead = args.nhead
-# num_encoder_layers = args.num_encoder_layers
-# num_decoder_layers = args.num_decoder_layers
-# dim_feedforward = args.dim_feedforward
-# dropout = args.dropout
-# activation = args.activation
-# custom_encoder = args.custom_encoder
-# custom_decoder = args.custom_decoder
-# layer_norm_eps = args.layer_norm_eps
-# batch_first = args.batch_first
-# norm_first = args.norm_first
+    def forward(self, x, mask=None, return_attention=False):
+        batch_size, seq_length, embed_dim = x.size()
+        qkv = self.qkv_proj(x)
 
-# tf_model = torch.nn.Transformer(d_model=d_model,
-#                                 nhead=nhead,
-#                                 num_encoder_layers=num_encoder_layers,
-#                                 num_decoder_layers=num_decoder_layers,
-#                                 dim_feedforward=dim_feedforward,
-#                                 dropout=dropout,
-#                                 activation=activation,
-#                                 custom_encoder=custom_encoder,
-#                                 custom_decoder=custom_decoder,
-#                                 layer_norm_eps=layer_norm_eps,
-#                                 batch_first=batch_first,
-#                                 norm_first=norm_first)
+        # Separate Q, K, V from linear output
+        qkv = qkv.reshape(batch_size, seq_length, self.num_heads, 3 * self.head_dim)
+        qkv = qkv.permute(0, 2, 1, 3)  # [Batch, Head, SeqLen, Dims]
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        # Determine value outputs
+        values, attention = scaled_dot_product(q, k, v, mask=mask, dropout=self.dropout)
+        values = values.permute(0, 2, 1, 3)  # [Batch, SeqLen, Head, Dims]
+        values = values.reshape(batch_size, seq_length, embed_dim)
+        o = self.o_proj(values)
+
+        if return_attention:
+            return o, attention
+        else:
+            return o
 
 
-# X_train = torch.tensor(X_train)
-# print(X_train.shape)
+class EncoderBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads, dim_feedforward, dropout=0.1):
+        """
+        Inputs:
+            embed_dim  - Dimensionality of the input
+            num_heads - Number of heads to use in the attention block
+            dim_feedforward - Dimensionality of the hidden layer in the MLP
+            dropout - Dropout probability to use in the dropout layers
+        """
+        super(EncoderBlock, self).__init__()
 
-#
-df = load_data()
-folds = [1, 2, 3, 4, 5]
-mon = [3, 6, 9, 12, 15, 18, 21]
-x_train, y_train, seq_train, x_val, y_val, seq_val = preprocess(df, mon[0], folds[0])
-slen = max(max(seq_train), max(seq_val))
-print('Slen: ' + str(slen))
+        # Attention layer
+        self.self_attn = MultiheadAttention(embed_dim, num_heads, dropout)
 
-train_dataset = AMDDataset(x_train, y_train, seq_train, slen)
-val_dataset = AMDDataset(x_val, y_val, seq_val, slen)
+        # Two-layer MLP
+        self.linear_net = nn.Sequential(
+            nn.Linear(embed_dim, dim_feedforward),
+            nn.Dropout(dropout),
+            nn.ReLU(inplace=True),
+            # nn.GELU(),
+            nn.Linear(dim_feedforward, embed_dim)
+        )
 
-train_loader = data.DataLoader(train_dataset, batch_size=16, shuffle=True, drop_last=True, num_workers=4,
-                               pin_memory=True)
-val_loader = data.DataLoader(val_dataset, batch_size=16, shuffle=False, drop_last=False, num_workers=4)
+        # Layers to apply in between the main layers
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask=None):
+        # Attention part
+        attn_out = self.self_attn(x, mask=mask)
+        x = x + self.dropout(attn_out)
+        x = self.norm1(x)
+
+        # MLP part
+        linear_out = self.linear_net(x)
+        x = x + self.dropout(linear_out)
+        x = self.norm2(x)
+
+        return x
 
 
+class TransformerEncoder(nn.Module):
+    def __init__(self, num_layers, **block_args):
+        super(TransformerEncoder, self).__init__()
+        self.layers = nn.ModuleList([EncoderBlock(**block_args) for _ in range(num_layers)])
 
-# test_dataset = AMDDataset()
-#  the sequence to the encoder (required)
-#     src = None
-#     # the sequence to the decoder (required).
-#     tgt = None
-#
-#     src, tgt = load_daata()
-#
-#     out = tf_model(src, tgt)
+    def forward(self, x, mask=None):
+        for l in self.layers:
+            x = l(x, mask=mask)
+        return x
+
+    def get_attention_maps(self, x, mask=None):
+        attention_maps = []
+        for l in self.layers:
+            _, attn_map = l.self_attn(x, mask=mask, return_attention=True)
+            attention_maps.append(attn_map)
+            x = l(x)
+        return attention_maps
+
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, dropout=0.0, max_len=50000):
+        """
+        Inputs
+            d_model - Hidden dimensionality of the input.
+            max_len - Maximum length of a sequence to expect.
+        """
+        super(PositionalEncoding, self).__init__()
+
+        self.dropout = nn.Dropout(p=dropout)
+        # Create matrix of [SeqLen, HiddenDim] representing the positional encoding for max_len inputs
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        even_div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        odd_div_term = torch.exp(torch.arange(1, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * even_div_term)
+        pe[:, 1::2] = torch.cos(position * odd_div_term)
+        pe = pe.unsqueeze(0)
+
+        # register_buffer => Tensor which is not a parameter, but should be part of the modules state.
+        # Used for tensors that need to be on the same device as the module.
+        # persistent=False tells PyTorch to not add the buffer to the state dict (e.g. when we save the model)
+        self.register_buffer('pe', pe, persistent=False)
+
+    def forward(self, x):
+        x = x + self.pe[:, :x.size(1)]
+        return self.dropout(x)
+
+
+class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
+    def __init__(self, optimizer, warmup, max_iters):
+        self.warmup = warmup
+        self.max_num_iters = max_iters
+        super(CosineWarmupScheduler, self).__init__(optimizer)
+
+    def get_lr(self):
+        lr_factor = self.get_lr_factor(epoch=self.last_epoch)
+        return [base_lr * lr_factor for base_lr in self.base_lrs]
+
+    def get_lr_factor(self, epoch):
+        lr_factor = 0.5 * (1 + np.cos(np.pi * epoch / self.max_num_iters))
+        if epoch <= self.warmup:
+            lr_factor *= epoch * 1.0 / self.warmup
+        return lr_factor
