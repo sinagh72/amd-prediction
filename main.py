@@ -94,7 +94,7 @@ for m in mon:
     print("no of patient:", len(df_train['Patient number'].unique()))
     # flg = [0,1]
     # the flag was 0, which is meaningless, because the test data set is used as validating data set.
-    f = 0
+    f = 1
 
     #     for f in flg:
     #         print('f: ', f)
