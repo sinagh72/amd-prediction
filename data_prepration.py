@@ -18,18 +18,18 @@ def training_data(df_cov, outcomestring):
         # print('for this patient',len(p))
         Seq_len.append(len(p))
         # store vector and labels for
-        pre_visit = 0
-        p = p.sort_values('Elapsed time since first imaging', ascending=False)
-        p = p.reset_index(drop=True)
+        # pre_visit = 0
+        # p = p.sort_values('Elapsed time since first imaging', ascending=False)
+        # p = p.reset_index(drop=True)
         for j in range(len(p)):
 
             # stroring vectors and labels
             temp = p.iloc[j]
-            if abs(temp['Elapsed time since first imaging'] - pre_visit) < 0.5:
-                pre_visit = temp['Elapsed time since first imaging']
-                print('Error. This should have been removed before!')
-                continue
-            pre_visit = temp['Elapsed time since first imaging']
+            # if abs(temp['Elapsed time since first imaging'] - pre_visit) < 0.5:
+            #     pre_visit = temp['Elapsed time since first imaging']
+            #     print('Error. This should have been removed before!')
+            #     continue
+            # pre_visit = temp['Elapsed time since first imaging']
             temp = temp.fillna(0)
             patients_label[i].append(p.iloc[j][outcomestring])
             # if p.iloc[j]['Event'] in  [True]:
