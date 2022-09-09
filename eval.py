@@ -43,7 +43,7 @@ for m in mon:
     test = test.replace('N/A', 0, regex=True)
     # test = df_miami
 
-    test = test.reset_index(drop=True)
+    # test = test.reset_index(drop=True)
 
     PP = pd.read_pickle(
         r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle')

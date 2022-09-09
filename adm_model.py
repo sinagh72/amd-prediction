@@ -13,10 +13,15 @@ from transformer import CosineWarmupScheduler, TransformerEncoder, PositionalEnc
 
 class AMDModel(pl.LightningModule):
     def __init__(self, embed_dim,
-                 model_dim, num_classes,
-                 num_heads, num_layers,
-                 lr, warmup, max_iters,
-                 dropout=0.0, input_dropout=0.0,
+                 model_dim,
+                 num_classes,
+                 num_heads,
+                 num_layers,
+                 lr,
+                 warmup,
+                 max_iters,
+                 dropout=0.0,
+                 input_dropout=0.0,
                  loss_func=None):
         """
         Inputs:
@@ -30,6 +35,7 @@ class AMDModel(pl.LightningModule):
             max_iters - Number of maximum iterations the model is trained for. This is needed for the CosineWarmup scheduler
             dropout - Dropout to apply inside the model
             input_dropout - Dropout to apply on the input features
+            loss_func - Loss function
         """
         super(AMDModel, self).__init__()
         self.save_hyperparameters()
@@ -119,7 +125,7 @@ class AMDModel(pl.LightningModule):
 
         y_pred = self.forward(x)
 
-        loss = self.loss_fn(y_true, y_pred)
+        loss = self.loss_func(y_true, y_pred)
 
         if stage == "train":
             output = self.train_metrics(y_pred, y_true)

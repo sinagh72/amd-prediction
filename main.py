@@ -1,8 +1,10 @@
+import numpy as np
 import pandas as pd
 import pickle
 from ModelTraining import model_training, model_using
 from os.path import exists
 import os
+from itertools import combinations
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -12,19 +14,28 @@ TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outc
 
 df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
-df_cov.loc[df_cov['Fold number'] == 2, 'Fold number'] = 1
+df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
+avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
+print('avg diff: ',avg)
 
-df_cov.loc[df_cov['Fold number'] == 3, 'Fold number'] = 2
-df_cov.loc[df_cov['Fold number'] == 4, 'Fold number'] = 2
+df_cov['diff'] = df_cov['diff'].fillna(1)
 
-df_cov.loc[df_cov['Fold number'] == 5, 'Fold number'] = 3
-df_cov.loc[df_cov['Fold number'] == 6, 'Fold number'] = 3
+df = df_cov[df_cov['diff'].abs() > 0.5]
 
-df_cov.loc[df_cov['Fold number'] == 7, 'Fold number'] = 4
-df_cov.loc[df_cov['Fold number'] == 8, 'Fold number'] = 4
+df.loc[df['Fold number'] == 2, 'Fold number'] = 1
 
-df_cov.loc[df_cov['Fold number'] == 10, 'Fold number'] = 5
-df_cov.loc[df_cov['Fold number'] == 9, 'Fold number'] = 5
+df.loc[df['Fold number'] == 3, 'Fold number'] = 2
+df.loc[df['Fold number'] == 4, 'Fold number'] = 2
+
+df.loc[df['Fold number'] == 5, 'Fold number'] = 3
+df.loc[df['Fold number'] == 6, 'Fold number'] = 3
+
+df.loc[df['Fold number'] == 7, 'Fold number'] = 4
+df.loc[df['Fold number'] == 8, 'Fold number'] = 4
+
+df.loc[df['Fold number'] == 10, 'Fold number'] = 5
+df.loc[df['Fold number'] == 9, 'Fold number'] = 5
+
 # df_miami = pd.read_excel(TEST_DATA_DIR)
 # df_miami = df_miami.fillna('N/A')
 
@@ -73,7 +84,7 @@ for m in mon:
     roc_pr_CV = dict()
 
     strm = 'Outcome at ' + str(m) + ' months'
-    df_train = df_cov[df_cov[strm] != 'N/A']
+    df_train = df[df[strm] != 'N/A']
     df_train = df_train.replace('N/A', 0, regex=True)
 
     # df_test = df_miami[df_miami[strm] != 'N/A'].copy()

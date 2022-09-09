@@ -125,22 +125,12 @@ def create_model(slen, num_features, n):
 def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     train = df_train[df_train['Fold number'] != fold]
     # train = df_train[df_train['Fold number'] % 5 != fold - 1]
-    train = train.reset_index(drop=True)
+    # train = train.reset_index(drop=True)
     patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
     print("#train: ", len(patients_vec_train))
-    # if val_flag == 0:
-    #     test = df_miami
-    #     test = test.reset_index(drop=True)
-    #     #print (list(test))
-    #     patients_vec_test, patients_label_test, Seq_len_test, row = testing_data(test, strm)
-    # elif val_flag == 1:
-    #     test = df_cov9[df_cov9['Fold number'] % 5 == fold-1]
-    #     test = test.reset_index(drop=True)
-    #     #print (list(test))
-    #     patients_vec_test, patients_label_test, Seq_len_test = training_data(test, strm)
 
     val = df_train[df_train['Fold number'] == fold]
-    val = val.reset_index(drop=True)
+    # val = val.reset_index(drop=True)
     patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
     print("#val: ", len(patients_vec_val))
 
@@ -148,7 +138,9 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     print('Slen: ' + str(slen))
 
-    X_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
+    X_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.1)
+    print(len(X_train_aug))
+
     X_train = pad_sequences(X_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
     Y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
 
@@ -157,7 +149,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
     Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
-    Y_categorical_val = k.utils.np_utils.to_categorical(Y_val, 3)
+    Y_categorical_val = k.utils.np_utils.to_categorical(Y_val, 3) 
     Y_categorical_val = Y_categorical_val.reshape(Y_val.shape[0], Y_val.shape[1], 3)
 
     y_train = Y_categorical_train

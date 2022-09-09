@@ -43,18 +43,18 @@ def preprocess(df, month, fold):
     df_train = df[df[strm] != 'N/A']
     df_train = df_train.replace('N/A', 0, regex=True)
     print("no of patient:", len(df_train['Patient number'].unique()))
-    train = df_train[df_train['Fold number'] % 5 != fold - 1]
+    train = df_train[df_train['Fold number'] != fold]
     train = train.reset_index(drop=True)
-    patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
+    patients_vec_train, patients_label_train, seq_len = training_data(train, strm)
     print("#train: ", len(patients_vec_train))
-    val = df_train[df_train['Fold number'] % 5 == fold - 1]
+    val = df_train[df_train['Fold number'] == fold]
     val = val.reset_index(drop=True)
-    patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
+    patients_vec_val, patients_label_val, seq_len_val = training_data(val, strm)
     print("#val: ", len(patients_vec_val))
 
     x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
 
-    return x_train_aug, y_train_aug, Seq_len, patients_label_val, patients_label_val, Seq_len_val
+    return x_train_aug, y_train_aug, seq_len, patients_vec_val, patients_label_val, seq_len_val
     # print(X_train.shape)
 
     # print(Y_train.shape)
@@ -148,8 +148,8 @@ x_train, y_train, seq_train, x_val, y_val, seq_val = preprocess(df, mon[0], fold
 slen = max(max(seq_train), max(seq_val))
 print('Slen: ' + str(slen))
 
-train_dataset = AMDDataset(x_train, y_train, seq_train, slen)
-val_dataset = AMDDataset(x_val, y_val, seq_val, slen)
+train_dataset = AMDDataset(x_train, y_train, slen)
+val_dataset = AMDDataset(x_val, y_val, slen)
 
 train_loader = data.DataLoader(train_dataset, batch_size=16, shuffle=True, drop_last=True, num_workers=4,
                                pin_memory=True)

@@ -1,8 +1,12 @@
+import math
+
+import numpy as np
+
 def training_data(df_cov, outcomestring):
     n_patient = len(df_cov['Patient number'].unique())
     patient_ids = df_cov['Patient number'].unique()
 
-    df_cov.sort_index(axis=1, inplace=True)
+    # df_cov.sort_index(axis=1, inplace=True)
     patients_vec = []
     patients_label = []
     Seq_len = []
@@ -10,13 +14,22 @@ def training_data(df_cov, outcomestring):
     for i in range(n_patient):
         patients_vec.append([])
         patients_label.append([])
-        p = df_cov.loc[df_cov['Patient number'] == patient_ids[i]]
+        p = df_cov[df_cov['Patient number'] == patient_ids[i]]
         # print('for this patient',len(p))
         Seq_len.append(len(p))
         # store vector and labels for
+        pre_visit = 0
+        p = p.sort_values('Elapsed time since first imaging', ascending=False)
+        p = p.reset_index(drop=True)
         for j in range(len(p)):
+
             # stroring vectors and labels
             temp = p.iloc[j]
+            if abs(temp['Elapsed time since first imaging'] - pre_visit) < 0.5:
+                pre_visit = temp['Elapsed time since first imaging']
+                print('Error. This should have been removed before!')
+                continue
+            pre_visit = temp['Elapsed time since first imaging']
             temp = temp.fillna(0)
             patients_label[i].append(p.iloc[j][outcomestring])
             # if p.iloc[j]['Event'] in  [True]:
@@ -41,28 +54,42 @@ def training_data(df_cov, outcomestring):
             temp = temp.drop("Progression during study")
             temp = temp.drop("Max. months remain dry")
             temp = temp.drop("Min. months to wet")
+            temp = temp.drop("diff")
 
-        # print(temp.shape)
+            # print(temp.shape)
+
             patients_vec[i].append(temp.tolist())
     return patients_vec, patients_label, Seq_len
 
 
-def dataaugmentation(patients_vec, patients_label):
+def dataaugmentation(patients_vec, patients_label, percentage):
     new_patients_vec = []
     new_patients_label = []
     flg = 0
+    dummy = [0] * len(patients_vec[0][0])
+    dummy_label = [2]
     for i in range(len(patients_vec)):  ## patient-wise
-        for j in range(len(patients_vec[i])): ## patient-visit
+        # len(patients_vec[i]) - 1 to make sure the last index will be never selected
+        p = math.floor((len(patients_vec[i]) - 1)*percentage)
+        print(p)
+        rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
+        print(rnd)
+        for j in range(len(patients_vec[i])):  ## patient-visit  ## pyramid
             # new_patients_vec.append([])
             # new_patients_label.append([])
             T = []
             L = []
+
             for k in range(j + 1):
-                T.append(patients_vec[i][k])
-                L.append(patients_label[i][k])
+                if j in rnd:
+                    T.append(dummy)
+                    L.append(dummy_label)
+                else:
+                    T.append(patients_vec[i][k])
+                    L.append(patients_label[i][k])
             new_patients_vec.append(T)
             new_patients_label.append(L)
-        for j in range(len(patients_vec[i]) - 1):
+        for j in range(len(patients_vec[i]) - 1):  ## inverse pyramid
             l = len(patients_vec[i]) - j
             T = []
             L = []
@@ -71,6 +98,7 @@ def dataaugmentation(patients_vec, patients_label):
                 L.append(patients_label[i][k])
             new_patients_vec.append(T)
             new_patients_label.append(L)
+
     return new_patients_vec, new_patients_label
 
 
