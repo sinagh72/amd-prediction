@@ -52,13 +52,13 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
 
-file_exists = exists("3/models")
+file_exists = exists("./models")
 if not file_exists:
-    os.mkdir("3/models")
+    os.mkdir("./models")
 
-file_exists = exists("3/CV_resultsv2")
+file_exists = exists("./CV_resultsv2")
 if not file_exists:
-    os.mkdir("3/CV_resultsv2")
+    os.mkdir("./CV_resultsv2")
 
 file_exists = exists("weights")
 if not file_exists:
