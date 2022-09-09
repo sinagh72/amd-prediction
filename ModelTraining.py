@@ -123,14 +123,15 @@ def create_model(slen, num_features, n):
 
 
 def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
-    train = df_train[df_train['Fold number'] != fold]
-    # train = df_train[df_train['Fold number'] % 5 != fold - 1]
-    # train = train.reset_index(drop=True)
+    # train = df_train[df_train['Fold number'] != fold]
+    train = df_train[df_train['Fold number'] % 5 != fold - 1]
+    train = train.reset_index(drop=True)
     patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
     print("#train: ", len(patients_vec_train))
 
-    val = df_train[df_train['Fold number'] == fold]
-    # val = val.reset_index(drop=True)
+    val = df_train[df_train['Fold number'] % 5 == fold - 1]
+    # val = df_train[df_train['Fold number'] == fold]
+    val = val.reset_index(drop=True)
     patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
     print("#val: ", len(patients_vec_val))
 
@@ -172,9 +173,8 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
         weights = np.array([class_weights[0], class_weights[1], class_weights[2]])
     except:
         weights = np.array([1, 50, 0.1])
-    print(weights)
-    loss = weighted_categorical_crossentropy(weights)
-    # loss = categorical_focal_loss(alpha=.25, gamma=2)
+    # loss = weighted_categorical_crossentropy(weights)
+    loss = categorical_focal_loss(alpha=.25, gamma=2)
     if flag == 1:
         model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],

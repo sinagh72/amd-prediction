@@ -14,27 +14,28 @@ TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outc
 
 df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
-df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
-avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
-print('avg diff: ',avg)
-
-df_cov['diff'] = df_cov['diff'].fillna(1)
-
-df = df_cov[df_cov['diff'].abs() > 0.5]
-
-df.loc[df['Fold number'] == 2, 'Fold number'] = 1
-
-df.loc[df['Fold number'] == 3, 'Fold number'] = 2
-df.loc[df['Fold number'] == 4, 'Fold number'] = 2
-
-df.loc[df['Fold number'] == 5, 'Fold number'] = 3
-df.loc[df['Fold number'] == 6, 'Fold number'] = 3
-
-df.loc[df['Fold number'] == 7, 'Fold number'] = 4
-df.loc[df['Fold number'] == 8, 'Fold number'] = 4
-
-df.loc[df['Fold number'] == 10, 'Fold number'] = 5
-df.loc[df['Fold number'] == 9, 'Fold number'] = 5
+df = df_cov
+# df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
+# avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
+# print('avg diff: ',avg)
+#
+# df_cov['diff'] = df_cov['diff'].fillna(1)
+#
+# df = df_cov[df_cov['diff'].abs() > 0.5]
+#
+# df.loc[df['Fold number'] == 2, 'Fold number'] = 1
+#
+# df.loc[df['Fold number'] == 3, 'Fold number'] = 2
+# df.loc[df['Fold number'] == 4, 'Fold number'] = 2
+#
+# df.loc[df['Fold number'] == 5, 'Fold number'] = 3
+# df.loc[df['Fold number'] == 6, 'Fold number'] = 3
+#
+# df.loc[df['Fold number'] == 7, 'Fold number'] = 4
+# df.loc[df['Fold number'] == 8, 'Fold number'] = 4
+#
+# df.loc[df['Fold number'] == 10, 'Fold number'] = 5
+# df.loc[df['Fold number'] == 9, 'Fold number'] = 5
 
 # df_miami = pd.read_excel(TEST_DATA_DIR)
 # df_miami = df_miami.fillna('N/A')
@@ -51,13 +52,13 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
 
-file_exists = exists("models")
+file_exists = exists("3/models")
 if not file_exists:
-    os.mkdir("models")
+    os.mkdir("3/models")
 
-file_exists = exists("CV_resultsv2")
+file_exists = exists("3/CV_resultsv2")
 if not file_exists:
-    os.mkdir("CV_resultsv2")
+    os.mkdir("3/CV_resultsv2")
 
 file_exists = exists("weights")
 if not file_exists:

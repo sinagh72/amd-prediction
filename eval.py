@@ -8,8 +8,8 @@ from data_prepration import testing_data
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './'
-DATA_DIR = BASE_DIR + '/data/'
+BASE_DIR = './0/'
+DATA_DIR = './data/'
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
 TEST_DATA_DIR = os.path.join(DATA_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
 
@@ -94,7 +94,7 @@ for m in mon:
     y_test = Y_categorical_test
 
     # bestmodel = model
-    latest_file = 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
+    latest_file = BASE_DIR + 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
     num_features = X_test.shape[2]
 
     bestmodel = create_model(slen, num_features, best_combo[0])
