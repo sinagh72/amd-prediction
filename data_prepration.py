@@ -67,13 +67,11 @@ def dataaugmentation(patients_vec, patients_label, percentage):
     new_patients_label = []
     flg = 0
     dummy = [0] * len(patients_vec[0][0])
-    dummy_label = [2]
+    dummy_label = 2
     for i in range(len(patients_vec)):  ## patient-wise
         # len(patients_vec[i]) - 1 to make sure the last index will be never selected
         p = math.floor((len(patients_vec[i]) - 1)*percentage)
-        print(p)
         rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
-        print(rnd)
         for j in range(len(patients_vec[i])):  ## patient-visit  ## pyramid
             # new_patients_vec.append([])
             # new_patients_label.append([])
