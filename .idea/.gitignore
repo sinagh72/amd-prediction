@@ -7,5 +7,7 @@
 /dataSources/
 /dataSources.local.xml
 ../__pycache__/
+../__pycache__
 *.py[cod]
 ../weights/
+__pychache__/
