@@ -4,6 +4,9 @@ import pickle
 from ModelTraining import model_training, model_using
 from os.path import exists
 import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 from itertools import combinations
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
