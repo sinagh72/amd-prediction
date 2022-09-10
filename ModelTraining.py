@@ -9,7 +9,7 @@ from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import BatchNormalization
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
-from data_prepration import training_data, testing_data, dataaugmentation
+
 import keras as k
 import numpy as np
 
@@ -139,35 +139,35 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     print('Slen: ' + str(slen))
 
-    X_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.1)
-    print(len(X_train_aug))
+    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.1)
+    print(len(x_train_aug))
 
-    X_train = pad_sequences(X_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
+    x_train = pad_sequences(x_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
+    y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
 
-    X_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
+    x_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
+    y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
 
-    Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
-    Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
-    Y_categorical_val = k.utils.np_utils.to_categorical(Y_val, 3) 
-    Y_categorical_val = Y_categorical_val.reshape(Y_val.shape[0], Y_val.shape[1], 3)
+    y_categorical_train = k.utils.np_utils.to_categorical(y_train, 3)
+    y_categorical_train = y_categorical_train.reshape(y_train.shape[0], y_train.shape[1], 3)
+    y_categorical_val = k.utils.np_utils.to_categorical(y_val, 3)
+    y_categorical_val = y_categorical_val.reshape(y_val.shape[0], y_val.shape[1], 3)
 
-    y_train = Y_categorical_train
-    y_val = Y_categorical_val
+    y_train = y_categorical_train
+    y_val = y_categorical_val
 
     filepath = "./weights2/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
     # checkpoint = ModelCheckpoint(filepath, monitor='val_precision_1', verbose=1, save_best_only=True, mode='max')
     checkpoint = ModelCheckpoint(filepath, monitor='val_precision', verbose=1, save_best_only=True, mode='max')
     es = EarlyStopping(monitor='val_precision', mode='max', verbose=1, patience=25)
     callbacks_list = [checkpoint, es]
-    num_features = X_train.shape[2]
+    num_features = x_train.shape[2]
     model = create_model(slen, num_features, n)
     print('slen+nfeatures+nn = ', slen, num_features, n)
     #     model.save('OCT_model.h5')
     #     print('Model saved!!')
     try:
-        wei = list(Y_train.reshape(X_train.shape[0] * slen))
+        wei = list(y_train.reshape(x_train.shape[0] * slen))
         print('len weight: ', len(wei))
         class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(wei), y=wei)
         weights = np.array([class_weights[0], class_weights[1], class_weights[2]])
@@ -184,10 +184,10 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],
                       optimizer=optimizers.Adam(learning_rate=0.001, decay=1e-6))
 
-    history = model.fit(X_train, y_train,
+    history = model.fit(x_train, y_train,
                         batch_size=64,
                         epochs=100,
-                        validation_data=(X_val, y_val), callbacks=callbacks_list, shuffle=True)
+                        validation_data=(x_val, y_val), callbacks=callbacks_list, shuffle=True)
     # list_of_files = glob.glob('./weights/*.h5py')  # * means all if need specific format then *.csv
     # latest_file = max(list_of_files, key=os.path.getctime)
     # print('latest file', latest_file)
@@ -202,9 +202,9 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     batch_size = 50
 
-    preds = bestmodel.predict(X_val, batch_size=batch_size)
-    y_pred = preds.reshape(X_val.shape[0] * slen, 3)
-    y_true = y_val.reshape(X_val.shape[0] * slen, 3)
+    preds = bestmodel.predict(x_val, batch_size=batch_size)
+    y_pred = preds.reshape(x_val.shape[0] * slen, 3)
+    y_true = y_val.reshape(x_val.shape[0] * slen, 3)
 
     # y_true_categorical = np.argmax(y_true[y_true[:, 2] == 0], axis=1)
     # y_pred_categorical = np.argmax(y_pred[y_true[:, 2] == 0], axis=1)

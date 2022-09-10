@@ -70,35 +70,46 @@ def dataaugmentation(patients_vec, patients_label, percentage):
     dummy_label = 2
     for i in range(len(patients_vec)):  ## patient-wise
         # len(patients_vec[i]) - 1 to make sure the last index will be never selected
-        # p = math.floor((len(patients_vec[i]) - 1)*percentage)
-        # rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
-        rnd = []
+        p = math.floor((len(patients_vec[i]) - 1)*percentage)
+        rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
+        rnd_inv = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
+        # print('patient id: ', i, ' rnd:', rnd, ' rnd_inv: ', rnd_inv, ', max visit:', len(patients_vec[i]))
         for j in range(len(patients_vec[i])):  ## patient-visit  ## pyramid
             # new_patients_vec.append([])
             # new_patients_label.append([])
             T = []
             L = []
-
-            for k in range(j + 1):
-                if j in rnd:
+            if j in rnd:
+                for k in range(j+1):
                     T.append(dummy)
                     L.append(dummy_label)
-                else:
+            else:
+                for k in range(j+1):
                     T.append(patients_vec[i][k])
                     L.append(patients_label[i][k])
+
             new_patients_vec.append(T)
             new_patients_label.append(L)
+
         for j in range(len(patients_vec[i]) - 1):  ## inverse pyramid
             l = len(patients_vec[i]) - j
             T = []
             L = []
-            for k in range(l):
-                T.append(patients_vec[i][k])
-                L.append(patients_label[i][k])
+
+            if j in rnd_inv:
+                for k in range(l):
+                    T.append(dummy)
+                    L.append(dummy_label)
+            else:
+                for k in range(l):
+                    T.append(patients_vec[i][k])
+                    L.append(patients_label[i][k])
+
             new_patients_vec.append(T)
             new_patients_label.append(L)
 
     return new_patients_vec, new_patients_label
+
 
 
 def testing_data(df_cov, outcomestring, srlen=100):
