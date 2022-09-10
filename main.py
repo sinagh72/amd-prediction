@@ -19,7 +19,7 @@ df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
 df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
 avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
-print('avg diff: ',avg)
+print('avg diff: ', avg)
 #
 df_cov['diff'] = df_cov['diff'].fillna(1)
 #
@@ -54,102 +54,114 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
 
-file_exists = exists("./5/models")
+percentage = np.arange(0.1, 1, 0.1)
+
+file_exists = exists(f"./percentage")
 if not file_exists:
-    os.mkdir("./5/models")
+    os.mkdir(f"./percentage")
 
-file_exists = exists("./5/CV_resultsv2")
-if not file_exists:
-    os.mkdir("./5/CV_resultsv2")
+for p in percentage:
+    print("percentage: ", p)
+    file_exists = exists(f"./percentage/p-{p}")
+    if not file_exists:
+        os.mkdir(f"./percentage/p-{p}")
 
-file_exists = exists("weights3")
-if not file_exists:
-    os.mkdir("weights3")
+    file_exists = exists(f"./percentage/p-{p}/models")
+    if not file_exists:
+        os.mkdir(f"./percentage/p-{p}/models")
 
-for m in mon:
+    file_exists = exists(f"./percentage/p-{p}/CV_resultsv2")
+    if not file_exists:
+        os.mkdir(f"./percentage/p-{p}/CV_resultsv2")
 
-    FPR = []
-    TPR = []
-    ROC_AUC = []
-    PREDS_prob = []
-    IP = []
-    IY = []
-    SLEN = []
+    file_exists = exists(f"./percentage/p-{p}/weights")
+    if not file_exists:
+        os.mkdir(f"./percentage/p-{p}/weights")
 
-    print('month:', m)
-    fpr_CV = dict()
-    tpr_CV = dict()
-    roc_auc_CV = dict()
-    prediction = dict()
-    gt = dict()
-    precision = dict()
-    recall = dict()
-    roc_pr_CV = dict()
+    for m in mon:
 
-    strm = 'Outcome at ' + str(m) + ' months'
-    df_train = df[df[strm] != 'N/A']
-    df_train = df_train.replace('N/A', 0, regex=True)
+        FPR = []
+        TPR = []
+        ROC_AUC = []
+        PREDS_prob = []
+        IP = []
+        IY = []
+        SLEN = []
 
-    # df_test = df_miami[df_miami[strm] != 'N/A'].copy()
-    # df_test = df_test.replace('N/A', 0, regex=True)
+        print('month:', m)
+        fpr_CV = dict()
+        tpr_CV = dict()
+        roc_auc_CV = dict()
+        prediction = dict()
+        gt = dict()
+        precision = dict()
+        recall = dict()
+        roc_pr_CV = dict()
 
-    print("no of patient:", len(df_train['Patient number'].unique()))
-    # flg = [0,1]
-    # the flag was 0, which is meaningless, because the test data set is used as validating data set.
-    f = 1
+        strm = 'Outcome at ' + str(m) + ' months'
+        df_train = df[df[strm] != 'N/A']
+        df_train = df_train.replace('N/A', 0, regex=True)
 
-    #     for f in flg:
-    #         print('f: ', f)
+        # df_test = df_miami[df_miami[strm] != 'N/A'].copy()
+        # df_test = df_test.replace('N/A', 0, regex=True)
 
-    for n in NN:
-        for fold in FOLDS:
-            # fold = random.randint(1,10)
-            print('fold: ' + str(fold))
-            print('NN: ', n)
-            path = 'OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
-            if os.path.isfile(path):
-                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                    model_using(df_train, m, fold, n, strm, path)
-            #     PP = pd.read_pickle(
-            #         r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle')
-            #     ROC_AUC = pd.read_pickle(
-            #         r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle')
-            #     IP = pd.read_pickle(r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle')
-            #     IY = pd.read_pickle(r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle')
-            #     SLEN = pd.read_pickle(r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_SLEN_' + str(f) + '.pickle')
+        print("no of patient:", len(df_train['Patient number'].unique()))
+        # flg = [0,1]
+        # the flag was 0, which is meaningless, because the test data set is used as validating data set.
+        f = 0
 
-            else:
-                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                    model_training(
-                        df_train, None,
-                        m,
-                        fold,
-                        n,
-                        f,
-                        strm,
-                        val_flag)
+        #     for f in flg:
+        #         print('f: ', f)
 
-            print('roc_auc: ', roc_auc)
-            print('===================')
-            FPR.append(fpr)
-            TPR.append(tpr)
-            ROC_AUC.append(roc_auc)
-            PREDS_prob.append(preds)
-            IP.append(y_pred)
-            IY.append(y_true)
-            SLEN.append(slen)
+        for n in NN:
+            for fold in FOLDS:
+                # fold = random.randint(1,10)
+                print('fold: ' + str(fold))
+                print('NN: ', n)
+                path = 'OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+                if os.path.isfile(path):
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_using(df_train, m, fold, n, strm, path)
+                else:
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_training(
+                            df_train, None,
+                            m,
+                            fold,
+                            n,
+                            f,
+                            strm,
+                            val_flag,
+                            p)
 
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(FPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(TPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(PREDS_prob, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(ROC_AUC, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(IP, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(IY, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_SLEN_' + str(f) + '.pickle', 'wb') as handle:
-        pickle.dump(SLEN, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                print('roc_auc: ', roc_auc)
+                print('===================')
+                FPR.append(fpr)
+                TPR.append(tpr)
+                ROC_AUC.append(roc_auc)
+                PREDS_prob.append(preds)
+                IP.append(y_pred)
+                IY.append(y_true)
+                SLEN.append(slen)
+
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(FPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(TPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(PREDS_prob, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(ROC_AUC, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(IP, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(IY, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_SLEN_' + str(f) + '.pickle',
+                  'wb') as handle:
+            pickle.dump(SLEN, handle, protocol=pickle.HIGHEST_PROTOCOL)

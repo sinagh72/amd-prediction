@@ -120,7 +120,7 @@ def create_model(slen, num_features, n):
     return model
 
 
-def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
+def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag, percentage):
     # train = df_train[df_train['Fold number'] != fold]
     train = df_train[df_train['Fold number'] % 5 != fold - 1]
     train = train.reset_index(drop=True)
@@ -137,7 +137,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     print('Slen: ' + str(slen))
 
-    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.4)
+    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, percentage)
     print(len(x_train_aug))
 
     x_train = pad_sequences(x_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
@@ -154,7 +154,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     y_train = y_categorical_train
     y_val = y_categorical_val
 
-    filepath = "./weights3/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
+    filepath = f"./percentage/p-{percentage}/weights/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
     # checkpoint = ModelCheckpoint(filepath, monitor='val_precision_1', verbose=1, save_best_only=True, mode='max')
     checkpoint = ModelCheckpoint(filepath, monitor='val_precision', verbose=1, save_best_only=True, mode='max')
     es = EarlyStopping(monitor='val_precision', mode='max', verbose=1, patience=25)
@@ -193,7 +193,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     # bestmodel.load_weights(latest_file)
 
     bestmodel = model
-    model_filename = '5/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+    model_filename = f'./percentage/p-{percentage}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
 
     bestmodel.save(model_filename)
     print('Model saved!!: ', model_filename)
