@@ -5,7 +5,7 @@ from ModelTraining import model_training, model_using
 from os.path import exists
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 from itertools import combinations
 
@@ -55,17 +55,17 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
 
-file_exists = exists("./models2")
+file_exists = exists("./5/models")
 if not file_exists:
-    os.mkdir("./models2")
+    os.mkdir("./5/models")
 
-file_exists = exists("./CV_resultsv22")
+file_exists = exists("./5/CV_resultsv2")
 if not file_exists:
-    os.mkdir("./CV_resultsv22")
+    os.mkdir("./5/CV_resultsv2")
 
-file_exists = exists("weights2")
+file_exists = exists("weights3")
 if not file_exists:
-    os.mkdir("weights2")
+    os.mkdir("weights3")
 
 for m in mon:
 
@@ -140,17 +140,17 @@ for m in mon:
             IY.append(y_true)
             SLEN.append(slen)
 
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(FPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(TPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(PREDS_prob, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(ROC_AUC, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(IP, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(IY, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('./CV_resultsv22/HARBOR' + str(m) + 'mon_SLEN_' + str(f) + '.pickle', 'wb') as handle:
+    with open('./5/CV_resultsv2/HARBOR' + str(m) + 'mon_SLEN_' + str(f) + '.pickle', 'wb') as handle:
         pickle.dump(SLEN, handle, protocol=pickle.HIGHEST_PROTOCOL)

@@ -9,11 +9,9 @@ from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import BatchNormalization
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
-
 import keras as k
 import numpy as np
-
-import os, glob
+from data_prepration import dataaugmentation, training_data
 
 
 def weighted_categorical_crossentropy(weights):
@@ -156,7 +154,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     y_train = y_categorical_train
     y_val = y_categorical_val
 
-    filepath = "./weights2/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
+    filepath = "./weights3/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
     # checkpoint = ModelCheckpoint(filepath, monitor='val_precision_1', verbose=1, save_best_only=True, mode='max')
     checkpoint = ModelCheckpoint(filepath, monitor='val_precision', verbose=1, save_best_only=True, mode='max')
     es = EarlyStopping(monitor='val_precision', mode='max', verbose=1, patience=25)
@@ -195,7 +193,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
     # bestmodel.load_weights(latest_file)
 
     bestmodel = model
-    model_filename = 'models2/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+    model_filename = '5/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
 
     bestmodel.save(model_filename)
     print('Model saved!!: ', model_filename)
