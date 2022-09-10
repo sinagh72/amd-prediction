@@ -137,7 +137,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag):
 
     print('Slen: ' + str(slen))
 
-    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.1)
+    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, 0.4)
     print(len(x_train_aug))
 
     x_train = pad_sequences(x_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')

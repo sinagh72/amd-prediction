@@ -17,14 +17,13 @@ TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outc
 
 df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
-df = df_cov
-# df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
-# avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
-# print('avg diff: ',avg)
+df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
+avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
+print('avg diff: ',avg)
 #
-# df_cov['diff'] = df_cov['diff'].fillna(1)
+df_cov['diff'] = df_cov['diff'].fillna(1)
 #
-# df = df_cov[df_cov['diff'].abs() > 0.5]
+df = df_cov[df_cov['diff'].abs() > 0.5]
 #
 # df.loc[df['Fold number'] == 2, 'Fold number'] = 1
 #

@@ -54,7 +54,7 @@ def training_data(df_cov, outcomestring):
             temp = temp.drop("Progression during study")
             temp = temp.drop("Max. months remain dry")
             temp = temp.drop("Min. months to wet")
-            # temp = temp.drop("diff")
+            temp = temp.drop("diff")
 
             # print(temp.shape)
 
