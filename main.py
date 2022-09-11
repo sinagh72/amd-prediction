@@ -53,7 +53,7 @@ FOLDS = [1, 2, 3, 4, 5]
 # FOLDS = [1]
 
 
-val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
+val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
 main_dir = './deafult'
 
