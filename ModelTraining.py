@@ -120,7 +120,7 @@ def create_model(slen, num_features, n):
     return model
 
 
-def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag, percentage):
+def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     # train = df_train[df_train['Fold number'] != fold]
     train = df_train[df_train['Fold number'] % 5 != fold - 1]
     train = train.reset_index(drop=True)
@@ -154,7 +154,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag, percenta
     y_train = y_categorical_train
     y_val = y_categorical_val
 
-    filepath = f"./percentage/p-{percentage}/weights/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
+    filepath = dir_name+f"/p-{percentage}/weights/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
     # checkpoint = ModelCheckpoint(filepath, monitor='val_precision_1', verbose=1, save_best_only=True, mode='max')
     checkpoint = ModelCheckpoint(filepath, monitor='val_precision', verbose=1, save_best_only=True, mode='max')
     es = EarlyStopping(monitor='val_precision', mode='max', verbose=1, patience=25)
@@ -193,7 +193,7 @@ def model_training(df_train, df_test, m, fold, n, flag, strm, val_flag, percenta
     # bestmodel.load_weights(latest_file)
 
     bestmodel = model
-    model_filename = f'./percentage/p-{percentage}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+    model_filename = dir_name+f'/p-{percentage}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
 
     bestmodel.save(model_filename)
     print('Model saved!!: ', model_filename)

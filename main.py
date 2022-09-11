@@ -21,9 +21,10 @@ df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['
 avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
 print('avg diff: ', avg)
 #
-df_cov['diff'] = df_cov['diff'].fillna(1)
+# df_cov['diff'] = df_cov['diff'].fillna(1)
 #
-df = df_cov[df_cov['diff'].abs() > 0.5]
+df = df_cov
+# df = df_cov[df_cov['diff'].abs() > 0.5]
 #
 # df.loc[df['Fold number'] == 2, 'Fold number'] = 1
 #
@@ -54,29 +55,32 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 1  # if using split val data, use 1, if using test data during training, use 0
 
-percentage = np.arange(0.1, 1, 0.1)
+main_dir = './deafult'
 
-file_exists = exists(f"./percentage")
+# percentage = np.arange(0.1, 1, 0.1)
+percentage = [0]
+
+file_exists = exists(main_dir)
 if not file_exists:
-    os.mkdir(f"./percentage")
+    os.mkdir(main_dir)
 
 for p in percentage:
     print("percentage: ", p)
-    file_exists = exists(f"./percentage/p-{p}")
+    file_exists = exists(main_dir+f"/p-{p}")
     if not file_exists:
-        os.mkdir(f"./percentage/p-{p}")
+        os.mkdir(main_dir+f"/p-{p}")
 
-    file_exists = exists(f"./percentage/p-{p}/models")
+    file_exists = exists(main_dir+f"/p-{p}/models")
     if not file_exists:
-        os.mkdir(f"./percentage/p-{p}/models")
+        os.mkdir(main_dir+f"/p-{p}/models")
 
-    file_exists = exists(f"./percentage/p-{p}/CV_resultsv2")
+    file_exists = exists(main_dir+f"/p-{p}/CV_resultsv2")
     if not file_exists:
-        os.mkdir(f"./percentage/p-{p}/CV_resultsv2")
+        os.mkdir(main_dir+f"/p-{p}/CV_resultsv2")
 
-    file_exists = exists(f"./percentage/p-{p}/weights")
+    file_exists = exists(main_dir+f"/p-{p}/weights")
     if not file_exists:
-        os.mkdir(f"./percentage/p-{p}/weights")
+        os.mkdir(main_dir+f"/p-{p}/weights")
 
     for m in mon:
 
@@ -119,20 +123,16 @@ for p in percentage:
                 print('fold: ' + str(fold))
                 print('NN: ', n)
                 path = 'OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
-                if os.path.isfile(path):
-                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                        model_using(df_train, m, fold, n, strm, path)
-                else:
-                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                        model_training(
-                            df_train, None,
-                            m,
-                            fold,
-                            n,
-                            f,
-                            strm,
-                            val_flag,
-                            p)
+                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                    model_training(
+                        df_train,
+                        m,
+                        fold,
+                        n,
+                        f,
+                        strm,
+                        main_dir,
+                        p)
 
                 print('roc_auc: ', roc_auc)
                 print('===================')

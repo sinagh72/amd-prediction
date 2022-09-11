@@ -8,7 +8,7 @@ from data_prepration import testing_data
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './0/'
+BASE_DIR = './4/'
 DATA_DIR = './data/'
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
 TEST_DATA_DIR = os.path.join(DATA_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
@@ -32,7 +32,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 auc_matrix = np.zeros((len(FOLDS), len(NN)))
 
-f = 0
+f = 1
 
 for m in mon:
     print('***********************************************************************')
@@ -95,6 +95,7 @@ for m in mon:
 
     # bestmodel = model
     latest_file = BASE_DIR + 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
+    print(latest_file)
     num_features = X_test.shape[2]
 
     bestmodel = create_model(slen, num_features, best_combo[0])

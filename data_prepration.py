@@ -5,8 +5,8 @@ import numpy as np
 def training_data(df_cov, outcomestring):
     n_patient = len(df_cov['Patient number'].unique())
     patient_ids = df_cov['Patient number'].unique()
+    df_cov.sort_index(axis=1, inplace=True)
 
-    # df_cov.sort_index(axis=1, inplace=True)
     patients_vec = []
     patients_label = []
     Seq_len = []
@@ -65,7 +65,6 @@ def training_data(df_cov, outcomestring):
 def dataaugmentation(patients_vec, patients_label, percentage):
     new_patients_vec = []
     new_patients_label = []
-    flg = 0
     dummy = [0] * len(patients_vec[0][0])
     dummy_label = 2
     for i in range(len(patients_vec)):  ## patient-wise
