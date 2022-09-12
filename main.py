@@ -122,17 +122,27 @@ for p in percentage:
                 # fold = random.randint(1,10)
                 print('fold: ' + str(fold))
                 print('NN: ', n)
-                path = 'OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
-                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                    model_training(
-                        df_train,
-                        m,
-                        fold,
-                        n,
-                        f,
-                        strm,
-                        main_dir,
-                        p)
+                path = main_dir+f'/p-{p}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+                if exists(path):
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_using(
+                            df_train,
+                            fold,
+                            n,
+                            strm,
+                            path
+                        )
+                else:
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_training(
+                            df_train,
+                            m,
+                            fold,
+                            n,
+                            f,
+                            strm,
+                            main_dir,
+                            p)
 
                 print('roc_auc: ', roc_auc)
                 print('===================')
@@ -144,24 +154,24 @@ for p in percentage:
                 IY.append(y_true)
                 SLEN.append(slen)
 
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionFPR_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(FPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_predictionTPR_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(TPR, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(PREDS_prob, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_ROC_AUC_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(ROC_AUC, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IP_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(IP, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_prediction_IY_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(IY, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(f"./percentage/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_SLEN_' + str(f) + '.pickle',
+        with open(main_dir+f"/p-{p}/CV_resultsv2/HARBOR" + str(m) + 'mon_SLEN_' + str(f) + '.pickle',
                   'wb') as handle:
             pickle.dump(SLEN, handle, protocol=pickle.HIGHEST_PROTOCOL)

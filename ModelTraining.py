@@ -217,7 +217,7 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     return fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen
 
 
-def model_using(df_train, m, fold, n, strm, model_path):
+def model_using(df_train, fold, n, strm, model_path):
     train = df_train[df_train['Fold number'] % 5 != fold - 1]
     train = train.reset_index(drop=True)
     patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
