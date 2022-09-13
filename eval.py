@@ -8,7 +8,7 @@ from data_prepration import testing_data
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './4/'
+BASE_DIR = './3/'
 DATA_DIR = './data/'
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
 TEST_DATA_DIR = os.path.join(DATA_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
@@ -32,7 +32,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 auc_matrix = np.zeros((len(FOLDS), len(NN)))
 
-f = 1
+f = 0
 
 for m in mon:
     print('***********************************************************************')
@@ -43,7 +43,7 @@ for m in mon:
     test = test.replace('N/A', 0, regex=True)
     # test = df_miami
 
-    # test = test.reset_index(drop=True)
+    test = test.reset_index(drop=True)
 
     PP = pd.read_pickle(
         r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_prediction_prob_' + str(f) + '.pickle')
@@ -84,9 +84,9 @@ for m in mon:
     patients_vec_test, patients_label_test, Seq_len_test = testing_data(test, strm, slen)
     # slen = 57
     # slen = max(Seq_len_test)
-    print('max #visit: ', slen)
-    X_test = pad_sequences(patients_vec_test, slen, padding='post', truncating='post', value=0, dtype='float32')
-    Y_test = pad_sequences(patients_label_test, slen, padding='post', truncating='post', value=2.)
+    # print('max #visit: ', slen)
+    X_test = pad_sequences(patients_vec_test, slen, padding='pre', truncating='pre', value=0, dtype='float32')
+    Y_test = pad_sequences(patients_label_test, slen, padding='pre', truncating='pre', value=2.)
 
     Y_categorical_test = k.utils.np_utils.to_categorical(Y_test, 3)
     Y_categorical_test = Y_categorical_test.reshape(Y_test.shape[0], Y_test.shape[1], 3)

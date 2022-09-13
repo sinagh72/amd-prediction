@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="90bc59c1-5123-4f42-83a6-d487fece2779" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -67,7 +69,7 @@
       <recent name="C:\Users\Sina\medical_dl\2" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.eval">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="medical_dl" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -94,9 +96,6 @@
       <module name="medical_dl" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -158,8 +157,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.main" />
         <item itemvalue="Python.eval" />
+        <item itemvalue="Python.main" />
         <item itemvalue="Python.temp" />
       </list>
     </recent_temporary>
@@ -247,6 +246,7 @@
       <workItem from="1662815447872" duration="853000" />
       <workItem from="1662816350230" duration="16000" />
       <workItem from="1662816388213" duration="7439000" />
+      <workItem from="1663072555147" duration="1754000" />
     </task>
     <servers />
   </component>

@@ -55,7 +55,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './deafult'
+main_dir = './default'
 
 # percentage = np.arange(0.1, 1, 0.1)
 percentage = [0]
@@ -103,7 +103,7 @@ for p in percentage:
         roc_pr_CV = dict()
 
         strm = 'Outcome at ' + str(m) + ' months'
-        df_train = df[df[strm] != 'N/A']
+        df_train = df[df[strm] != 'N/A'].copy()
         df_train = df_train.replace('N/A', 0, regex=True)
 
         # df_test = df_miami[df_miami[strm] != 'N/A'].copy()

@@ -209,7 +209,7 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     y_true_categorical = y_true[y_true[:, 2] == 0, 1]
     y_pred_score = y_pred[y_true[:, 2] == 0, 1]
 
-    fpr, tpr, thresholds = roc_curve(y_true_categorical, y_pred_score)
+    fpr, tpr, thresholds = roc_curve(y_true_categorical, y_pred_score, pos_label=1)
     roc_auc = auc(fpr, tpr)
     lr_precision, lr_recall, _ = precision_recall_curve(y_true_categorical, y_pred_score)
     lr_auc = auc(lr_recall, lr_precision)
@@ -261,7 +261,7 @@ def model_using(df_train, fold, n, strm, model_path):
     y_true_categorical = y_true[y_true[:, 2] == 0, 1]
     y_pred_categorical = y_pred[y_true[:, 2] == 0, 1]
 
-    fpr, tpr, thresholds = roc_curve(y_true_categorical, y_pred_categorical)
+    fpr, tpr, thresholds = roc_curve(y_true_categorical, y_pred_categorical, pos_label=1)
     roc_auc = auc(fpr, tpr)
     lr_precision, lr_recall, _ = precision_recall_curve(y_true_categorical, y_pred_categorical)
     lr_auc = auc(lr_recall, lr_precision)
