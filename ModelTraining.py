@@ -171,8 +171,9 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
         weights = np.array([class_weights[0], class_weights[1], class_weights[2]])
     except:
         weights = np.array([1, 50, 0.1])
-    # loss = weighted_categorical_crossentropy(weights)
-    loss = categorical_focal_loss(alpha=.25, gamma=2)
+    # weights = np.array([1, 50, 0.1])
+    loss = weighted_categorical_crossentropy(weights)
+    # loss = categorical_focal_loss(alpha=.25, gamma=2)
     if flag == 1:
         model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],

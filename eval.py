@@ -8,7 +8,7 @@ from data_prepration import testing_data
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './3/'
+BASE_DIR = './default/p-0/'
 DATA_DIR = './data/'
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
 TEST_DATA_DIR = os.path.join(DATA_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
