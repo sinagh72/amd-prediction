@@ -5,7 +5,7 @@ from ModelTraining import model_training, model_using
 from os.path import exists
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 from itertools import combinations
 
@@ -55,7 +55,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './weighted_adam_nrm'
+main_dir = './weighted_rsmprop_nrm'
 
 # percentage = np.arange(0.1, 1, 0.1)
 percentage = [0]
@@ -111,7 +111,7 @@ for p in percentage:
 
         print("no of patient:", len(df_train['Patient number'].unique()))
 
-        f = 0
+        f = 1
 
         #     for f in flg:
         #         print('f: ', f)
