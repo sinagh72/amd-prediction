@@ -55,7 +55,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './default'
+main_dir = './default2'
 
 # percentage = np.arange(0.1, 1, 0.1)
 percentage = [0]
@@ -122,26 +122,26 @@ for p in percentage:
                 print('fold: ' + str(fold))
                 print('NN: ', n)
                 path = main_dir+f'/p-{p}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
-                # if exists(path):
-                #     fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                #         model_using(
-                #             df_train,
-                #             fold,
-                #             n,
-                #             strm,
-                #             path
-                #         )
-                # else:
-                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                    model_training(
-                        df_train,
-                        m,
-                        fold,
-                        n,
-                        f,
-                        strm,
-                        main_dir,
-                        p)
+                if exists(path):
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_using(
+                            df_train,
+                            fold,
+                            n,
+                            strm,
+                            path
+                        )
+                else:
+                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                        model_training(
+                            df_train,
+                            m,
+                            fold,
+                            n,
+                            f,
+                            strm,
+                            main_dir,
+                            p)
 
                 print('roc_auc: ', roc_auc)
                 print('===================')
