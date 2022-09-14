@@ -110,9 +110,8 @@ for p in percentage:
         # df_test = df_test.replace('N/A', 0, regex=True)
 
         print("no of patient:", len(df_train['Patient number'].unique()))
-        # flg = [0,1]
-        # the flag was 0, which is meaningless, because the test data set is used as validating data set.
-        f = 0
+
+        f = 1
 
         #     for f in flg:
         #         print('f: ', f)
@@ -123,26 +122,26 @@ for p in percentage:
                 print('fold: ' + str(fold))
                 print('NN: ', n)
                 path = main_dir+f'/p-{p}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
-                if exists(path):
-                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                        model_using(
-                            df_train,
-                            fold,
-                            n,
-                            strm,
-                            path
-                        )
-                else:
-                    fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
-                        model_training(
-                            df_train,
-                            m,
-                            fold,
-                            n,
-                            f,
-                            strm,
-                            main_dir,
-                            p)
+                # if exists(path):
+                #     fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                #         model_using(
+                #             df_train,
+                #             fold,
+                #             n,
+                #             strm,
+                #             path
+                #         )
+                # else:
+                fpr, tpr, roc_auc, preds, y_pred, y_true, lr_precision, lr_recall, lr_auc, slen = \
+                    model_training(
+                        df_train,
+                        m,
+                        fold,
+                        n,
+                        f,
+                        strm,
+                        main_dir,
+                        p)
 
                 print('roc_auc: ', roc_auc)
                 print('===================')
