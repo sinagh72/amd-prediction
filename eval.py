@@ -102,7 +102,7 @@ for m in mon:
     bestmodel = create_model(slen, num_features, best_combo[0])
     bestmodel.load_weights(latest_file)
 
-    batch_size = 50
+    batch_size = 25
     preds = bestmodel.predict(X_test, batch_size=batch_size)
     # convert to the (Batch*Visit, one_hot)
     y_pred = preds.reshape(X_test.shape[0] * slen, 3)
