@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 
+
 def training_data(df_cov, outcomestring):
     n_patient = len(df_cov['Patient number'].unique())
     patient_ids = df_cov['Patient number'].unique()
@@ -19,10 +20,10 @@ def training_data(df_cov, outcomestring):
         Seq_len.append(len(p))
         # store vector and labels for
         # pre_visit = 0
-        # p = p.sort_values('Elapsed time since first imaging', ascending=False)
-        # p = p.reset_index(drop=True)
-        for j in range(len(p)):
+        p = p.sort_values('Elapsed time since first imaging', ascending=True)
+        p = p.reset_index(drop=True)
 
+        for j in range(len(p)):
             # stroring vectors and labels
             temp = p.iloc[j]
             # if abs(temp['Elapsed time since first imaging'] - pre_visit) < 0.5:
@@ -69,8 +70,11 @@ def dataaugmentation(patients_vec, patients_label, percentage):
     dummy_label = 2
     for i in range(len(patients_vec)):  ## patient-wise
         # len(patients_vec[i]) - 1 to make sure the last index will be never selected
-        p = math.floor((len(patients_vec[i]) - 1)*percentage)
+        # find the percentage values of the dataset
+        p = math.floor((len(patients_vec[i]) - 1) * percentage)
+        # select p random values between 0 and to len(patient[i]) - 2 for the first half of augmentation
         rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
+        # select p random values between 0 and to len(patient[i]) - 2 for the second half of augmentation
         rnd_inv = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
         # print('patient id: ', i, ' rnd:', rnd, ' rnd_inv: ', rnd_inv, ', max visit:', len(patients_vec[i]))
         for j in range(len(patients_vec[i])):  ## patient-visit  ## pyramid
@@ -79,11 +83,11 @@ def dataaugmentation(patients_vec, patients_label, percentage):
             T = []
             L = []
             if j in rnd:
-                for k in range(j+1):
+                for k in range(j + 1):
                     T.append(dummy)
                     L.append(dummy_label)
             else:
-                for k in range(j+1):
+                for k in range(j + 1):
                     T.append(patients_vec[i][k])
                     L.append(patients_label[i][k])
 
@@ -110,7 +114,6 @@ def dataaugmentation(patients_vec, patients_label, percentage):
     return new_patients_vec, new_patients_label
 
 
-
 def testing_data(df_cov, outcomestring, srlen=100):
     n_patient = len(df_cov['Patient name and eye'].unique())
     patient_ids = df_cov['Patient name and eye'].unique()
@@ -125,6 +128,8 @@ def testing_data(df_cov, outcomestring, srlen=100):
         p = df_cov.loc[df_cov['Patient name and eye'] == patient_ids[i]]
         # p = p.sort_values(['start'], ascending=[True])
         # print(len(p))
+        p = p.sort_values('Elapsed time since first imaging', ascending=True)
+        p = p.reset_index(drop=True)
         Seq_len.append(len(p))
         dif = 0 if srlen > len(p) else len(p) - srlen
         # store vector and labels for
