@@ -53,8 +53,8 @@ def training_data(df_cov, outcomestring):
             temp = temp.drop("Outcome at 24 months")  # added later
             temp = temp.drop("Elapsed time since first imaging")
             temp = temp.drop("Progression during study")
-            temp = temp.drop("Max. months remain dry")
-            temp = temp.drop("Min. months to wet")
+            # temp = temp.drop("Max. months remain dry")
+            # temp = temp.drop("Min. months to wet")
             temp = temp.drop("diff")
 
             # print(temp.shape)
@@ -167,8 +167,8 @@ def testing_data(df_cov, outcomestring, srlen=100):
             temp = temp.drop("Number averaged scans")  # added later
             temp = temp.drop("Number previous visits")  # added later
             temp = temp.drop("Progression during study")
-            temp = temp.drop("Max. months remain dry")
-            temp = temp.drop("Min. months to wet")
+            # temp = temp.drop("Max. months remain dry")
+            # temp = temp.drop("Min. months to wet")
 
             # print(temp.shape)
 

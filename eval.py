@@ -107,7 +107,7 @@ for m in mon:
     # convert to the (Batch*Visit, one_hot)
     y_pred = preds.reshape(X_test.shape[0] * slen, 3)
     y_true = y_test.reshape(X_test.shape[0] * slen, 3)
-
+    # select those that index 2 is 0 (in one-hot encoding the y is 0) and
     y_true_categorical = y_true[y_true[:, 2] == 0, 1]
     y_pred_score = y_pred[y_true[:, 2] == 0, 1]
 
