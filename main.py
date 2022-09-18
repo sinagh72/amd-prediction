@@ -111,7 +111,7 @@ for p in percentage:
 
         print("no of patient:", len(df_train['Patient number'].unique()))
 
-        f = 1
+        f = 0
 
         #     for f in flg:
         #         print('f: ', f)
