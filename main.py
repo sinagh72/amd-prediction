@@ -55,10 +55,10 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './default_max_min'
+main_dir = './def_halfpyramid_percentage/'
 
-# percentage = np.arange(0.1, 1, 0.1)
-percentage = [0]
+percentage = np.arange(0.0, 1, 0.1)
+# percentage = [0]
 
 file_exists = exists(main_dir)
 if not file_exists:

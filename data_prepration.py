@@ -53,8 +53,8 @@ def training_data(df_cov, outcomestring):
             temp = temp.drop("Outcome at 24 months")  # added later
             temp = temp.drop("Elapsed time since first imaging")
             temp = temp.drop("Progression during study")
-            # temp = temp.drop("Max. months remain dry")
-            # temp = temp.drop("Min. months to wet")
+            temp = temp.drop("Max. months remain dry")
+            temp = temp.drop("Min. months to wet")
             temp = temp.drop("diff")
 
             # print(temp.shape)
@@ -75,7 +75,7 @@ def dataaugmentation(patients_vec, patients_label, percentage):
         # select p random values between 0 and to len(patient[i]) - 2 for the first half of augmentation
         rnd = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
         # select p random values between 0 and to len(patient[i]) - 2 for the second half of augmentation
-        rnd_inv = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
+        # rnd_inv = np.random.choice(range(len(patients_vec[i]) - 1), p, replace=False)
         # print('patient id: ', i, ' rnd:', rnd, ' rnd_inv: ', rnd_inv, ', max visit:', len(patients_vec[i]))
         for j in range(len(patients_vec[i])):  ## patient-visit  ## pyramid
             # new_patients_vec.append([])
@@ -94,22 +94,22 @@ def dataaugmentation(patients_vec, patients_label, percentage):
             new_patients_vec.append(T)
             new_patients_label.append(L)
 
-        for j in range(len(patients_vec[i]) - 1):  ## inverse pyramid
-            l = len(patients_vec[i]) - j
-            T = []
-            L = []
-
-            if j in rnd_inv:
-                for k in range(l):
-                    T.append(dummy)
-                    L.append(dummy_label)
-            else:
-                for k in range(l):
-                    T.append(patients_vec[i][k])
-                    L.append(patients_label[i][k])
-
-            new_patients_vec.append(T)
-            new_patients_label.append(L)
+        # for j in range(len(patients_vec[i]) - 1):  ## inverse pyramid
+        #     l = len(patients_vec[i]) - j
+        #     T = []
+        #     L = []
+        #
+        #     if j in rnd_inv:
+        #         for k in range(l):
+        #             T.append(dummy)
+        #             L.append(dummy_label)
+        #     else:
+        #         for k in range(l):
+        #             T.append(patients_vec[i][k])
+        #             L.append(patients_label[i][k])
+        #
+        #     new_patients_vec.append(T)
+        #     new_patients_label.append(L)
 
     return new_patients_vec, new_patients_label
 
@@ -167,8 +167,8 @@ def testing_data(df_cov, outcomestring, srlen=100):
             temp = temp.drop("Number averaged scans")  # added later
             temp = temp.drop("Number previous visits")  # added later
             temp = temp.drop("Progression during study")
-            # temp = temp.drop("Max. months remain dry")
-            # temp = temp.drop("Min. months to wet")
+            temp = temp.drop("Max. months remain dry")
+            temp = temp.drop("Min. months to wet")
 
             # print(temp.shape)
 

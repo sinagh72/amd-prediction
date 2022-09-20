@@ -181,10 +181,10 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     else:
         model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],
-                      optimizer=optimizers.Adam(learning_rate=0.001, decay=1e-6))
+                      optimizer=optimizers.Adam(learning_rate=0.0001, decay=1e-6))
 
     history = model.fit(x_train, y_train,
-                        batch_size=64,
+                        batch_size=32,
                         epochs=100,
                         validation_data=(x_val, y_val), callbacks=callbacks_list, shuffle=True)
     # list_of_files = glob.glob('./weights/*.h5py')  # * means all if need specific format then *.csv
