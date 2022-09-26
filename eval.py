@@ -8,7 +8,7 @@ from data_prepration import testing_data
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './default_max_min/p-0/'
+BASE_DIR = './def_halfpyramid_percentage/p-0.30000000000000004/'
 DATA_DIR = './data/'
 f = 0
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')

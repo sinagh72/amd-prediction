@@ -5,8 +5,7 @@ from ModelTraining import model_training, model_using
 from os.path import exists
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from itertools import combinations
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -55,7 +54,7 @@ FOLDS = [1, 2, 3, 4, 5]
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './def_halfpyramid_percentage/'
+main_dir = './paper_percentage/'
 
 percentage = np.arange(0.0, 1, 0.1)
 # percentage = [0]
