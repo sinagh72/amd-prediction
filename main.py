@@ -5,7 +5,7 @@ from ModelTraining import model_training, model_using
 from os.path import exists
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 from itertools import combinations
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -16,9 +16,9 @@ TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outc
 
 df_cov = pd.read_excel(TRAIN_DATA_DIR)
 df_cov = df_cov.fillna('N/A')
-df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
-avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
-print('avg diff: ', avg)
+# df_cov['diff'] = df_cov['Elapsed time since first imaging'].shift(-1) - df_cov['Elapsed time since first imaging']
+# avg = df_cov[df_cov['diff'] > 0]['diff'].mean()
+# print('avg diff: ', avg)
 #
 # df_cov['diff'] = df_cov['diff'].fillna(1)
 #
@@ -45,18 +45,20 @@ df = df_cov
 mon = [3, 6, 9, 12, 15, 18, 21]  # if testing only one month
 # mon = [3]  # if testing only one month
 # NN = [5]
-NN = [5, 10, 20, 25, 30, 50]
+# NN = [5, 10, 20, 25, 30, 50]
+NN = [1]
+# NN = [25, 30, 50]
 # NN = [5]
 
-FOLDS = [1, 2, 3, 4, 5]
+FOLDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 # FOLDS = [1]
 
 
 val_flag = 0  # if using split val data, use 1, if using test data during training, use 0
 
-main_dir = './paper_percentage/'
+main_dir = './exact_post_wcc_bslen_halfpyramid_fold10_n5020/'
 
-percentage = np.arange(0.0, 1, 0.1)
+percentage = np.arange(0.0, 0.5, 0.1)
 # percentage = [0]
 
 file_exists = exists(main_dir)

@@ -11,7 +11,7 @@ from keras.layers import BatchNormalization
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 import keras as k
 import numpy as np
-from data_prepration import dataaugmentation, training_data
+from data_prepration import *
 
 
 def weighted_categorical_crossentropy(weights):
@@ -99,15 +99,21 @@ def focal_loss(gamma=2., alpha=.25):
 
 
 def create_model(slen, num_features, n):
+    n1 = n
+    n2 = n
+    if n == 1:
+        n1 = 50
+        n2 = 20
+
     model = Sequential()
 
-    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=False, input_shape=(slen, num_features),
+    model.add(LSTM(n1, return_sequences=True, activation='sigmoid', stateful=False, input_shape=(slen, num_features),
                    name='lstm_1'))
     # model.add(BatchNormalization(mode=0))
     model.add(BatchNormalization())
     # model.add(LSTM(1000, return_sequences=True, activation='sigmoid', name='LSTM_2'))
     model.add(Dropout(0.2, name='dropout'))
-    model.add(LSTM(n, return_sequences=True, activation='sigmoid', stateful=False, name='lstm_2'))
+    model.add(LSTM(n2, return_sequences=True, activation='sigmoid', stateful=False, name='lstm_2'))
     # model.add(Dropout(0.2))
     # model.add(LSTM(25, return_sequences=True, activation='sigmoid', name='LSTM_3'))
     # model.add(Activation("relu", name = 'Relu_activation'))
@@ -121,30 +127,45 @@ def create_model(slen, num_features, n):
 
 
 def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
-    # train = df_train[df_train['Fold number'] != fold]
-    train = df_train[df_train['Fold number'] % 5 != fold - 1]
+    train = df_train[df_train['Fold number'] != fold]
+    # train = df_train[df_train['Fold number'] % 5 != fold - 1]
     train = train.reset_index(drop=True)
+    # seq_training = get_seq_len(train)
+
+    # val = df_train[df_train['Fold number'] % 5 == fold - 1]
+    val = df_train[df_train['Fold number'] == fold]
+    val = val.reset_index(drop=True)
+    # seq_valid = get_seq_len(val)
+
+    # patients_vec_train, patients_label_train, Seq_len = training_data2(train, strm, slen)
     patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
     print("#train: ", len(patients_vec_train))
 
-    val = df_train[df_train['Fold number'] % 5 == fold - 1]
-    # val = df_train[df_train['Fold number'] == fold]
-    val = val.reset_index(drop=True)
+    # patients_vec_val, patients_label_val, Seq_len_val = training_data2(val, strm, slen)
     patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
     print("#val: ", len(patients_vec_val))
 
-    slen = max(max(Seq_len), max(Seq_len_val))
-
+    slen = max(max(Seq_len_val), max(Seq_len))
     print('Slen: ' + str(slen))
 
     x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, percentage)
     print(len(x_train_aug))
 
-    x_train = pad_sequences(x_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
+    x_train = pad_sequences(x_train_aug, slen, padding='post', truncating='post', value=0, dtype='float32')
+    y_train = pad_sequences(y_train_aug, slen, padding='post', truncating='post', value=2.)
 
-    x_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
+    x_val = pad_sequences(patients_vec_val, slen, padding='post', truncating='post', value=0, dtype='float32')
+    y_val = pad_sequences(patients_label_val, slen, padding='post', truncating='post', value=2.)
+
+    # x_train = np.asarray(patients_vec_train)
+    # y_train = np.asarray(patients_label_train)
+    # print('x train shape:', x_train.shape)
+    # print('y train shape:', x_train.shape)
+
+    # x_val = np.asarray(patients_vec_val)
+    # y_val = np.asarray(patients_label_val)
+    # print('x val shape:', x_val.shape)
+    # print('y val shape:', y_val.shape)
 
     y_categorical_train = k.utils.np_utils.to_categorical(y_train, 3)
     y_categorical_train = y_categorical_train.reshape(y_train.shape[0], y_train.shape[1], 3)
@@ -154,7 +175,8 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     y_train = y_categorical_train
     y_val = y_categorical_val
 
-    filepath = dir_name+f"/p-{percentage}/weights/Harbor" + str(m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
+    filepath = dir_name + f"/p-{percentage}/weights/Harbor" + str(
+        m) + "monweights-improvement-{epoch:02d}-{val_precision:.3f}.h5py"
     # checkpoint = ModelCheckpoint(filepath, monitor='val_precision_1', verbose=1, save_best_only=True, mode='max')
     checkpoint = ModelCheckpoint(filepath, monitor='val_precision', verbose=1, save_best_only=True, mode='max')
     es = EarlyStopping(monitor='val_precision', mode='max', verbose=1, patience=25)
@@ -172,8 +194,8 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
     except:
         weights = np.array([1, 50, 0.1])
     # weights = np.array([1, 50, 0.1])
-    # loss = weighted_categorical_crossentropy(weights)
-    loss = categorical_focal_loss(alpha=.25, gamma=2)
+    loss = weighted_categorical_crossentropy(weights)
+    # loss = categorical_focal_loss(alpha=.25, gamma=2)
     if flag == 1:
         model.compile(loss=[loss],
                       metrics=[tf.keras.metrics.Precision(name='precision'), tf.keras.metrics.Recall(name='recall')],
@@ -184,22 +206,23 @@ def model_training(df_train, m, fold, n, flag, strm, dir_name, percentage):
                       optimizer=optimizers.Adam(learning_rate=0.0001, decay=1e-6))
 
     history = model.fit(x_train, y_train,
-                        batch_size=32,
+                        batch_size=slen,
                         epochs=100,
                         validation_data=(x_val, y_val), callbacks=callbacks_list, shuffle=True)
-    # list_of_files = glob.glob('./weights/*.h5py')  # * means all if need specific format then *.csv
+    # list_of_files = glob.glob('./weights/*.h5py')  # * means all if you need specific format then *.csv
     # latest_file = max(list_of_files, key=os.path.getctime)
     # print('latest file', latest_file)
     # bestmodel = create_model(slen, num_features, n)
     # bestmodel.load_weights(latest_file)
 
     bestmodel = model
-    model_filename = dir_name+f'/p-{percentage}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(fold) + '.h5'
+    model_filename = dir_name + f'/p-{percentage}/models/OCT_model_with_weights_' + str(m) + '_' + str(n) + '_' + str(
+        fold) + '.h5'
 
     bestmodel.save(model_filename)
     print('Model saved!!: ', model_filename)
 
-    batch_size = 50
+    batch_size = slen
 
     preds = bestmodel.predict(x_val, batch_size=batch_size)
     y_pred = preds.reshape(x_val.shape[0] * slen, 3)
@@ -236,8 +259,8 @@ def model_using(df_train, fold, n, strm, model_path):
     # X_train = pad_sequences(X_train_aug, slen, padding='pre', truncating='pre', value=0, dtype='float32')
     # Y_train = pad_sequences(y_train_aug, slen, padding='pre', truncating='pre', value=2.)
     #
-    X_val = pad_sequences(patients_vec_val, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_val = pad_sequences(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
+    X_val = pad_sequences(patients_vec_val, slen, padding='post', truncating='post', value=0, dtype='float32')
+    Y_val = pad_sequences(patients_label_val, slen, padding='post', truncating='post', value=2.)
 
     # Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
     # Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
@@ -253,7 +276,7 @@ def model_using(df_train, fold, n, strm, model_path):
     model.load_weights(model_path)
     print('model loaded: ', model_path)
     print('slen+nfeatures+nn = ', slen, num_features, n)
-    batch_size = 50
+    batch_size = slen
 
     preds = model.predict(X_val, batch_size=batch_size)
     y_pred = preds.reshape(X_val.shape[0] * slen, 3)

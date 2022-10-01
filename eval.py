@@ -4,11 +4,11 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from keras_preprocessing.sequence import pad_sequences
 import os
 import matplotlib.pyplot as plt
-from data_prepration import testing_data
+from data_prepration import testing_data, testing_data2, testaugmentation
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = './def_halfpyramid_percentage/p-0.30000000000000004/'
+BASE_DIR = 'paper_percentage/p-0.4/'
 DATA_DIR = './data/'
 f = 0
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
@@ -24,16 +24,14 @@ print(len(df_miami))
 # mon = [6] # if testing only one month
 
 mon = [3, 6, 9, 12, 15, 18, 21]
-# mon = [3, 6]
+# mon = [3]
 
 NN = [5, 10, 20, 25, 30, 50]
-# NN = [5, 10]
+# NN = [25, 30, 50]
 # FOLDS = [1]
 FOLDS = [1, 2, 3, 4, 5]
 
 auc_matrix = np.zeros((len(FOLDS), len(NN)))
-
-
 
 for m in mon:
     print('***********************************************************************')
@@ -58,7 +56,7 @@ for m in mon:
     print('AUC values:')
     print(aucMesh)
 
-# AUC for NN configs over folds
+    # AUC for NN configs over folds
     AUC_NN = []
     for i in range(0, len(NN) * len(FOLDS), len(FOLDS)):
         ipall = np.vstack((IP[i], IP[i + 1], IP[i + 2], IP[i + 3], IP[i + 4]))
@@ -86,8 +84,12 @@ for m in mon:
     # slen = 57
     # slen = max(Seq_len_test)
     # print('max #visit: ', slen)
-    X_test = pad_sequences(patients_vec_test, slen, padding='pre', truncating='pre', value=0, dtype='float32')
-    Y_test = pad_sequences(patients_label_test, slen, padding='pre', truncating='pre', value=2.)
+    # new_patients_vec, new_patients_label = testaugmentation(patients_vec_test, patients_label_test, 0)
+
+    X_test = pad_sequences(patients_vec_test, slen, padding='pre', truncating='post', value=0, dtype='float32')
+    Y_test = pad_sequences(patients_label_test, slen, padding='pre', truncating='post', value=2.)
+    # X_test = np.asarray(patients_vec_test)
+    # Y_test = np.asarray(patients_label_test)
 
     Y_categorical_test = k.utils.np_utils.to_categorical(Y_test, 3)
     Y_categorical_test = Y_categorical_test.reshape(Y_test.shape[0], Y_test.shape[1], 3)
@@ -95,14 +97,15 @@ for m in mon:
     y_test = Y_categorical_test
 
     # bestmodel = model
-    latest_file = BASE_DIR + 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(best_combo[1]) + '.h5'
+    latest_file = BASE_DIR + 'models/OCT_model_with_weights_' + str(m) + '_' + str(best_combo[0]) + '_' + str(
+        best_combo[1]) + '.h5'
     print(latest_file)
     num_features = X_test.shape[2]
 
     bestmodel = create_model(slen, num_features, best_combo[0])
     bestmodel.load_weights(latest_file)
 
-    batch_size = 25
+    batch_size = slen
     preds = bestmodel.predict(X_test, batch_size=batch_size)
     # convert to the (Batch*Visit, one_hot)
     y_pred = preds.reshape(X_test.shape[0] * slen, 3)
