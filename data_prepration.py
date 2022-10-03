@@ -1,7 +1,8 @@
 import math
-
+import os
+import pandas as pd
 import numpy as np
-
+from sklearn.preprocessing import QuantileTransformer, MinMaxScaler, StandardScaler
 
 def get_seq_len(df_cov):
     n_patient = len(df_cov['Patient number'].unique())
@@ -353,3 +354,98 @@ def testaugmentation(X_test, y_test, no_visit=5):
             new_patients_vec.append(K)
             new_patients_label.append(L)
     return new_patients_vec, new_patients_label
+
+def normalizing(df, norm_type):
+    cnt = 0
+    result = df.dtypes
+    if norm_type == 0:
+        trans = MinMaxScaler()
+    elif norm_type == 1:
+        trans = StandardScaler()
+    elif norm_type == 2:
+        trans = QuantileTransformer(n_quantiles=100, output_distribution='normal')
+
+    for col_name in df.columns:
+        # df[col_name].fillna(0, inplace=True)
+        if result[cnt] not in ['int', 'float'] or 'Outcome' in col_name or 'Elapsed time since first imaging' in col_name or 'Race' in col_name or 'Smoking'  in col_name or 'Gender' in col_name:
+            cnt += 1
+            continue
+        #Select the column
+        num_df = df[col_name]
+
+        col_values = num_df.values.reshape(-1,1)
+
+        col_values_norm = trans.fit_transform(col_values)
+
+        df[col_name] = col_values_norm
+        cnt += 1
+    return df
+
+
+def load_data():
+    BASE_DIR = './data/'
+    TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
+    TEST_DATA_DIR = os.path.join(BASE_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
+
+    df_miami = pd.read_excel(TEST_DATA_DIR)
+    df_miami = df_miami.fillna('N/A')
+
+    df_harbor = pd.read_excel(TRAIN_DATA_DIR)
+    df_harbor = df_harbor.fillna('N/A')
+    df_harbor.loc[df_harbor['Fold number'] == 1, 'Fold number'] = 1
+    df_harbor.loc[df_harbor['Fold number'] == 6, 'Fold number'] = 1
+
+    df_harbor.loc[df_harbor['Fold number'] == 2, 'Fold number'] = 2
+    df_harbor.loc[df_harbor['Fold number'] == 7, 'Fold number'] = 2
+
+    df_harbor.loc[df_harbor['Fold number'] == 3, 'Fold number'] = 3
+    df_harbor.loc[df_harbor['Fold number'] == 8, 'Fold number'] = 3
+
+    df_harbor.loc[df_harbor['Fold number'] == 4, 'Fold number'] = 4
+    df_harbor.loc[df_harbor['Fold number'] == 9, 'Fold number'] = 4
+
+    df_harbor.loc[df_harbor['Fold number'] == 5, 'Fold number'] = 5
+    df_harbor.loc[df_harbor['Fold number'] == 10, 'Fold number'] = 5
+    return df_harbor, df_miami
+
+
+def preprocess(df_harbor, df_miami, month, fold):
+    print('month:', month)
+    strm = 'Outcome at ' + str(month) + ' months'
+    df_train = df_harbor[df_harbor[strm] != 'N/A']
+    df_train = df_train.replace('N/A', 0, regex=True)
+    df_train["Patient number"] = df_train["Patient number"].astype(str)
+
+    print("Harbor #patient:", len(df_train['Patient number'].unique()))
+    train = df_train[df_train['Fold number'] % 5 != fold - 1]
+    train = train.reset_index(drop=True)
+    train = normalizing(train, 2)
+    patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
+    print("#train: ", len(patients_vec_train))
+
+    val = df_train[df_train['Fold number'] % 5 == fold - 1]
+    val = val.reset_index(drop=True)
+    val = normalizing(val, 2)
+    patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
+    print("#val: ", len(patients_vec_val))
+    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
+
+    slen = max(max(Seq_len), max(Seq_len_val))
+
+    df_test = df_miami[df_miami[strm] != 'N/A']
+    result = df_test.dtypes
+    pd.options.mode.chained_assignment = None
+    len([x for x in result if x == 'bool'])
+    df_test = df_test.replace('N/A', 0, regex=True)
+    df_test["Gender: (0) Male, (1) Female"] = df_test["Gender: (0) Male, (1) Female"].astype(int)
+    df_test.drop(columns=["Number previous visits", "Contralateral eye moths wet", "Number averaged scans",
+                          "Contralateral eye status", "Progression during study"], inplace=True)
+    df_test["Patient name and eye"] = df_test["Patient name and eye"].astype(str)
+    df_test["Patient number"] = df_test["Patient number"].astype(str)
+    df_test = df_test.reset_index(drop=True)
+    df_test = normalizing(df_test, 2)
+    patients_vec_test, patients_label_test, Seq_len_test = testing_data(df_test, strm, slen)
+    print("#test: ", len(patients_vec_test))
+
+    return x_train_aug, y_train_aug, Seq_len, patients_vec_val, patients_label_val, Seq_len_val, patients_vec_test, \
+           patients_label_test, Seq_len_test

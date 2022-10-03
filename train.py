@@ -1,189 +1,121 @@
-import pickle
-
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
 import torch
-# import argparse
-import os
-import pandas as pd
 import torch.nn.functional as F
 import torch.utils.data as data
 from pytorch_lightning.callbacks import EarlyStopping
-from torch import device
 import pytorch_lightning as pl
 from adm_dataset import AMDDataset
 from adm_model import AMDModel
-from data_prepration import training_data, dataaugmentation
-from keras_preprocessing.sequence import pad_sequences
+from data_prepration import  load_data, preprocess
 import numpy as np
+from focal_loss import FocalLoss
 
-
-def load_data():
-    base_dir = './data/'
-    train_data_dir = os.path.join(base_dir, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
-    df_cov = pd.read_excel(train_data_dir)
-    df_cov = df_cov.fillna('N/A')
-    df_cov.loc[df_cov['Fold number'] == 2, 'Fold number'] = 1
-
-    df_cov.loc[df_cov['Fold number'] == 3, 'Fold number'] = 2
-    df_cov.loc[df_cov['Fold number'] == 4, 'Fold number'] = 2
-
-    df_cov.loc[df_cov['Fold number'] == 5, 'Fold number'] = 3
-    df_cov.loc[df_cov['Fold number'] == 6, 'Fold number'] = 3
-
-    df_cov.loc[df_cov['Fold number'] == 7, 'Fold number'] = 4
-    df_cov.loc[df_cov['Fold number'] == 8, 'Fold number'] = 4
-
-    df_cov.loc[df_cov['Fold number'] == 10, 'Fold number'] = 5
-    df_cov.loc[df_cov['Fold number'] == 9, 'Fold number'] = 5
-    return df_cov
-
-
-def preprocess(df, month, fold):
-    print('month:', month)
-    strm = 'Outcome at ' + str(month) + ' months'
-    df_train = df[df[strm] != 'N/A']
-    df_train = df_train.replace('N/A', 0, regex=True)
-    print("no of patient:", len(df_train['Patient number'].unique()))
-    train = df_train[df_train['Fold number'] != fold]
-    train = train.reset_index(drop=True)
-    patients_vec_train, patients_label_train, seq_len = training_data(train, strm)
-    print("#train: ", len(patients_vec_train))
-    val = df_train[df_train['Fold number'] == fold]
-    val = val.reset_index(drop=True)
-    patients_vec_val, patients_label_val, seq_len_val = training_data(val, strm)
-    print("#val: ", len(patients_vec_val))
-
-    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
-
-    return x_train_aug, y_train_aug, seq_len, patients_vec_val, patients_label_val, seq_len_val
-    # print(X_train.shape)
-
-    # print(Y_train.shape)
-    #
-    # X_val = torch.nn.utils.rnn.pad_sequence(patients_vec_val, slen, padding='pre', truncating='pre', value=0,
-    #                                         dtype='float32')
-    # Y_val = torch.nn.utils.rnn.pad_sequence(patients_label_val, slen, padding='pre', truncating='pre', value=2.)
-    #
-    # Y_categorical_train = k.utils.np_utils.to_categorical(Y_train, 3)
-    # Y_categorical_train = Y_categorical_train.reshape(Y_train.shape[0], Y_train.shape[1], 3)
-    # Y_categorical_val = k.utils.np_utils.to_categorical(Y_val, 3)
-    # Y_categorical_val = Y_categorical_val.reshape(Y_val.shape[0], Y_val.shape[1], 3)
-    #
-    # y_train = Y_categorical_train
-    # y_val = Y_categorical_val
-
-
-# if __name__ == "__main__":
-# parser = argparse.ArgumentParser()
-# parser.parse_args()
-# parser.add_argument("-d", "--d_model", default=512, type=int,
-#                     help="the number of expected features in the encoder/decoder inputs")
-#
-# parser.add_argument("-nh", "--n_head", default=8, type=int,
-#                     help="the number of heads in the multiheadattention models (default=8)")
-#
-# parser.add_argument("-ne", "--num_encoder_layers", default=6, type=int,
-#                     help="the number of sub-encoder-layers in the encoder (default=6)")
-#
-# parser.add_argument("-nd", "--num_decoder_layers", default=6, type=int,
-#                     help="the number of sub-decoder-layers in the decoder (default=6)")
-#
-# parser.add_argument("-f", "--dim_feedforward", default=2048, type=int,
-#                     help="the dimension of the feedforward network model (default=2048)")
-#
-# parser.add_argument("-dr", "--dropout", default=0.1, type=float,
-#                     help="the dropout value (default=0.1)")
-#
-# parser.add_argument("-a", "--activation", default="relu", type=str, choices=["relu", "gelu"],
-#                     help="the activation function of encoder/decoder intermediate layer, "
-#                          "can be a string (“relu” or “gelu”) or a unary callable. Default: relu")
-#
-# parser.add_argument("-le", "--layer_norm_eps", default=1e-5, type=float,
-#                     help="the eps value in layer normalization components (default=1e-5)")
-#
-# parser.add_argument("-b", "--batch_first", action="store_true",
-#                     help="If True, then the input and output tensors are provided as (batch, seq, feature). "
-#                          "Default: False (seq, batch, feature)")
-#
-# parser.add_argument("-nf", "--norm_first", action="store_true",
-#                     help="if True, encoder and decoder layers will perform LayerNorms before other attention and "
-#                          "feedforward operations, otherwise after. Default: False (after)")
-#
-# args = parser.parse_args()
-
-# d_model = args.d_model
-# nhead = args.nhead
-# num_encoder_layers = args.num_encoder_layers
-# num_decoder_layers = args.num_decoder_layers
-# dim_feedforward = args.dim_feedforward
-# dropout = args.dropout
-# activation = args.activation
-# custom_encoder = args.custom_encoder
-# custom_decoder = args.custom_decoder
-# layer_norm_eps = args.layer_norm_eps
-# batch_first = args.batch_first
-# norm_first = args.norm_first
-
-# tf_model = torch.nn.Transformer(d_model=d_model,
-#                                 nhead=nhead,
-#                                 num_encoder_layers=num_encoder_layers,
-#                                 num_decoder_layers=num_decoder_layers,
-#                                 dim_feedforward=dim_feedforward,
-#                                 dropout=dropout,
-#                                 activation=activation,
-#                                 custom_encoder=custom_encoder,
-#                                 custom_decoder=custom_decoder,
-#                                 layer_norm_eps=layer_norm_eps,
-#                                 batch_first=batch_first,
-#                                 norm_first=norm_first)
-
-
-# X_train = torch.tensor(X_train)
-# print(X_train.shape)
-
-#
-df = load_data()
+# load data
+df_harbor, df_miami = load_data()
+# set the folds and months
 folds = [1, 2, 3, 4, 5]
 mon = [3, 6, 9, 12, 15, 18, 21]
-x_train, y_train, seq_train, x_val, y_val, seq_val = preprocess(df, mon[0], folds[0])
+# preprocessing and retrieving data
+x_train, y_train, seq_train, x_val, y_val, seq_val, x_test, y_test, seq_test = preprocess(df_harbor, df_miami, mon[0],
+                                                                                          folds[0])
+# max visit among training and validation data
 slen = max(max(seq_train), max(seq_val))
 print('Slen: ' + str(slen))
+# sample of data
+idx = 0
+visit_num = seq_train[idx]
+print('#visits:', visit_num)
+ind = int(np.sum(seq_train[:idx]))
+print('summ:', ind)
+visit_seq = x_train[ind:ind + visit_num]  # get the seq of visits for patient idx
+output_seq = y_train[ind:ind + visit_num]  # get the outcome of visit seq for patient idx
+print('visit seq:', len(visit_seq))
+print('output seq:', len(output_seq))
+print()
 
+# creating data set for train, valid, test, prediction
 train_dataset = AMDDataset(x_train, y_train, slen)
 val_dataset = AMDDataset(x_val, y_val, slen)
-
-train_loader = data.DataLoader(train_dataset, batch_size=16, shuffle=True, drop_last=True, num_workers=4,
+test_dataset = AMDDataset(x_test, y_test, slen)
+pred_dataset = AMDDataset(x_test, y_test, slen, is_pred=True)
+# data loaders
+train_loader = data.DataLoader(train_dataset, batch_size=slen, shuffle=True, drop_last=True,
+                               num_workers=4,
                                pin_memory=True)
-val_loader = data.DataLoader(val_dataset, batch_size=16, shuffle=False, drop_last=False, num_workers=4)
+val_loader = data.DataLoader(val_dataset, batch_size=slen, shuffle=False, drop_last=False,
+                             num_workers=4)
+test_loader = data.DataLoader(test_dataset, batch_size=1, shuffle=False, drop_last=False,
+                              num_workers=4)
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=3,
+pred_loader = data.DataLoader(pred_dataset, batch_size=1, shuffle=False, drop_last=False,
+                              num_workers=4)
+# set early stopping
+early_stopping = EarlyStopping(monitor='val_loss', patience=25,
                                verbose=False, mode="min")
-trainer = pl.Trainer(gpus=1,
-                     max_epochs=100,
+
+# the trainer
+trainer = pl.Trainer(accelerator='gpu', devices=[0],
+                     max_epochs=200,
                      callbacks=[early_stopping])
+
+alpha = 0.25
+gamma = 2
 # Check whether pretrained model exists. If yes, load it and skip training
 model = AMDModel(embed_dim=53,
                  model_dim=54,
-                 num_heads=6,
                  num_classes=3,
+                 num_heads=6,
                  num_layers=8,
-                 dropout=0.1,
                  lr=1e-4,
                  warmup=50,
                  max_iters=trainer.max_epochs * len(train_loader),
+                 dropout=0.1,
+                 loss_func=FocalLoss(gamma, alpha)
                  )
 trainer.fit(model, train_loader, val_loader)
 
-# Test best model on validation and test set
-# val_result = trainer.validate(model, val_loader, verbose=True)
-# test_result = trainer.test(model, test_loader, verbose=True)
+trainer.test(model, dataloaders=test_loader)
+predictions = trainer.predict(model, dataloaders=pred_loader)
 
+y_true = torch.zeros(len(y_test), slen, 3)
+for i, t in enumerate(y_test):
+    a = torch.tensor(np.pad(t, (0, slen - len(t)), mode='constant', constant_values=2), dtype=torch.long)
+    out = F.one_hot(a, num_classes=3)
+    y_true[i] = out
+print('y test shape:', y_true.shape)
 
-# test_dataset = AMDDataset()
-#  the sequence to the encoder (required)
-#     src = None
-#     # the sequence to the decoder (required).
-#     tgt = None
-#
-#     src, tgt = load_daata()
-#
-#     out = tf_model(src, tgt)
+y_pred = torch.zeros(len(y_test), slen, 3)
+for i, t in enumerate(predictions):
+    y_pred[i] = t
+
+print('y pred shape:', y_pred.shape)
+
+y_true = torch.flatten(y_true, end_dim=-2)
+y_pred = torch.flatten(y_pred, end_dim=-2)
+
+target = y_true[y_true[:, 2] == 0, 1].numpy()
+pred = y_pred[y_true[:, 2] == 0, 1].numpy()
+
+fpr, tpr, thresholds = roc_curve(target, pred, pos_label=1)
+roc_auc = auc(fpr, tpr)
+
+lr_precision, lr_recall, _ = precision_recall_curve(target, pred)
+lr_auc = auc(lr_recall, lr_precision)
+
+print('AUC and lr_AUC: ', roc_auc, lr_auc)
+
+## Plot teh ROC curve
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve for ' + str(mon[0]) + 'months (area = %0.4f)' % roc_auc)
+
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([-0.01, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC curves for short and long term prediction')
+plt.legend(loc="lower right")
+plt.show()

@@ -2,7 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="90bc59c1-5123-4f42-83a6-d487fece2779" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/focal_loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adm_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/adm_dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adm_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/adm_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_prepration.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_prepration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

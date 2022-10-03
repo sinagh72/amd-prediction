@@ -8,7 +8,7 @@ from data_prepration import testing_data, testing_data2, testaugmentation
 import keras as k
 from ModelTraining import create_model
 
-BASE_DIR = 'paper_percentage/p-0.4/'
+BASE_DIR = 'exact_post_wcc_bslen_halfpyramid_fold10_n5020/p-0.0/'
 DATA_DIR = './data/'
 f = 0
 # TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
@@ -25,11 +25,12 @@ print(len(df_miami))
 
 mon = [3, 6, 9, 12, 15, 18, 21]
 # mon = [3]
-
-NN = [5, 10, 20, 25, 30, 50]
+NN = [1]
+# NN = [5, 10, 20, 25, 30, 50]
 # NN = [25, 30, 50]
 # FOLDS = [1]
-FOLDS = [1, 2, 3, 4, 5]
+# FOLDS = [1, 2, 3, 4, 5]
+FOLDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 auc_matrix = np.zeros((len(FOLDS), len(NN)))
 
@@ -86,8 +87,8 @@ for m in mon:
     # print('max #visit: ', slen)
     # new_patients_vec, new_patients_label = testaugmentation(patients_vec_test, patients_label_test, 0)
 
-    X_test = pad_sequences(patients_vec_test, slen, padding='pre', truncating='post', value=0, dtype='float32')
-    Y_test = pad_sequences(patients_label_test, slen, padding='pre', truncating='post', value=2.)
+    X_test = pad_sequences(patients_vec_test, slen, padding='post', truncating='post', value=0, dtype='float32')
+    Y_test = pad_sequences(patients_label_test, slen, padding='post', truncating='post', value=2.)
     # X_test = np.asarray(patients_vec_test)
     # Y_test = np.asarray(patients_label_test)
 
