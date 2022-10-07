@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import QuantileTransformer, MinMaxScaler, StandardScaler
 
+
 def get_seq_len(df_cov):
     n_patient = len(df_cov['Patient number'].unique())
     patient_ids = df_cov['Patient number'].unique()
@@ -70,7 +71,7 @@ def training_data2(df_cov, outcomestring, srlen):
     return patients_vec, patients_label, Seq_len
 
 
-def training_data(df_cov, outcomestring):
+def training_data(df_cov, outcomestring, srlen):
     n_patient = len(df_cov['Patient number'].unique())
     patient_ids = df_cov['Patient number'].unique()
     df_cov.sort_index(axis=1, inplace=True)
@@ -236,47 +237,6 @@ def testing_data2(df_cov, outcomestring, srlen=100):
                     patients_label[c].append(2)
                     patients_vec[c].append([0] * 53)
             c += 1
-        # for j in range(len(p)):
-        #     # stroring vectors and labels
-        #     temp = p.iloc[j]
-        #     temp = temp.fillna(0)
-        #     patients_label[i].append(p.iloc[j][outcomestring])
-        #     # if p.iloc[j]['Event'] in  [True]:
-        #     # if p.iloc[j]['Event'] in  [True]:
-        #     #   patients_label[i].append(1)
-        #     # if p.iloc[j]['Event'] in [False]:
-        #     #   patients_label[i].append(0)
-        #     temp = temp.drop('Patient name and eye')
-        #     temp = temp.drop("Patient number")
-        #     # temp = temp.drop("Event")
-        #     # temp = temp.drop("stop")
-        #     # temp = temp.drop("start")
-        #     temp = temp.drop("Fold number")
-        #
-        #     temp = temp.drop("Elapsed time since first imaging")
-        #     temp = temp.drop("Outcome at 6 months")
-        #     temp = temp.drop("Outcome at 3 months")
-        #     temp = temp.drop("Outcome at 9 months")
-        #     temp = temp.drop("Outcome at 12 months")
-        #     temp = temp.drop("Outcome at 15 months")
-        #     temp = temp.drop("Outcome at 18 months")
-        #     temp = temp.drop("Outcome at 21 months")
-        #     temp = temp.drop("Outcome at 24 months")  # added later
-        #     temp = temp.drop("Contralateral eye status")  # added later
-        #     temp = temp.drop("Contralateral eye moths wet")  # added later
-        #     temp = temp.drop("Number averaged scans")  # added later
-        #     temp = temp.drop("Number previous visits")  # added later
-        #     temp = temp.drop("Progression during study")
-        #     temp = temp.drop("Max. months remain dry")
-        #     temp = temp.drop("Min. months to wet")
-        #
-        #     # print(temp.shape)
-        #
-        #     # row.append(temp["Row"])
-        #     # temp = temp.drop("Row")
-        #
-        #     patients_vec[i].append(temp.tolist())
-
     return patients_vec, patients_label, Seq_len
 
 
@@ -355,6 +315,7 @@ def testaugmentation(X_test, y_test, no_visit=5):
             new_patients_label.append(L)
     return new_patients_vec, new_patients_label
 
+
 def normalizing(df, norm_type):
     cnt = 0
     result = df.dtypes
@@ -367,13 +328,14 @@ def normalizing(df, norm_type):
 
     for col_name in df.columns:
         # df[col_name].fillna(0, inplace=True)
-        if result[cnt] not in ['int', 'float'] or 'Outcome' in col_name or 'Elapsed time since first imaging' in col_name or 'Race' in col_name or 'Smoking'  in col_name or 'Gender' in col_name:
+        if result[cnt] not in ['int',
+                               'float'] or 'Outcome' in col_name or 'Elapsed time since first imaging' in col_name or 'Race' in col_name or 'Smoking' in col_name or 'Gender' in col_name:
             cnt += 1
             continue
-        #Select the column
+        # Select the column
         num_df = df[col_name]
 
-        col_values = num_df.values.reshape(-1,1)
+        col_values = num_df.values.reshape(-1, 1)
 
         col_values_norm = trans.fit_transform(col_values)
 
@@ -382,15 +344,23 @@ def normalizing(df, norm_type):
     return df
 
 
+import pandas as pd
+
+
 def load_data():
     BASE_DIR = './data/'
     TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.xls')
     TEST_DATA_DIR = os.path.join(BASE_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019 (1).xls')
+    # TRAIN_DATA_DIR = os.path.join(BASE_DIR, 'Imaging_clinical_feature_set_folds_outcomes_07_25_2018.csv')
+    # TEST_DATA_DIR = os.path.join(BASE_DIR, 'BPEI_feature_set_folds_outcomes_06_10_2019.csv')
 
     df_miami = pd.read_excel(TEST_DATA_DIR)
+    # df_miami = pd.read_csv(TRAIN_DATA_DIR)
     df_miami = df_miami.fillna('N/A')
 
     df_harbor = pd.read_excel(TRAIN_DATA_DIR)
+    # df_miami = pd.read_csv(TRAIN_DATA_DIR)
+
     df_harbor = df_harbor.fillna('N/A')
     df_harbor.loc[df_harbor['Fold number'] == 1, 'Fold number'] = 1
     df_harbor.loc[df_harbor['Fold number'] == 6, 'Fold number'] = 1
@@ -409,7 +379,7 @@ def load_data():
     return df_harbor, df_miami
 
 
-def preprocess(df_harbor, df_miami, month, fold):
+def preprocess(df_harbor, df_miami, month, fold, percentage):
     print('month:', month)
     strm = 'Outcome at ' + str(month) + ' months'
     df_train = df_harbor[df_harbor[strm] != 'N/A']
@@ -417,33 +387,39 @@ def preprocess(df_harbor, df_miami, month, fold):
     df_train["Patient number"] = df_train["Patient number"].astype(str)
 
     print("Harbor #patient:", len(df_train['Patient number'].unique()))
-    train = df_train[df_train['Fold number'] % 5 != fold - 1]
+    train = df_train[df_train['Fold number'] != fold]
     train = train.reset_index(drop=True)
     train = normalizing(train, 2)
-    patients_vec_train, patients_label_train, Seq_len = training_data(train, strm)
-    print("#train: ", len(patients_vec_train))
+    seq_train = get_seq_len(train)
 
-    val = df_train[df_train['Fold number'] % 5 == fold - 1]
+    val = df_train[df_train['Fold number'] == fold]
     val = val.reset_index(drop=True)
     val = normalizing(val, 2)
-    patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm)
-    print("#val: ", len(patients_vec_val))
-    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train)
+    seq_val = get_seq_len(val)
 
-    slen = max(max(Seq_len), max(Seq_len_val))
+    slen = max(max(seq_train), max(seq_val))
+
+    patients_vec_train, patients_label_train, Seq_len = training_data(train, strm, slen)
+    print("#train: ", len(patients_vec_train))
+
+    patients_vec_val, patients_label_val, Seq_len_val = training_data(val, strm, slen)
+    print("#val: ", len(patients_vec_val))
+    x_train_aug, y_train_aug = dataaugmentation(patients_vec_train, patients_label_train, percentage)
 
     df_test = df_miami[df_miami[strm] != 'N/A']
+    df_test = df_test.replace('N/A', 0, regex=True)
     result = df_test.dtypes
     pd.options.mode.chained_assignment = None
     len([x for x in result if x == 'bool'])
     df_test = df_test.replace('N/A', 0, regex=True)
     df_test["Gender: (0) Male, (1) Female"] = df_test["Gender: (0) Male, (1) Female"].astype(int)
-    df_test.drop(columns=["Number previous visits", "Contralateral eye moths wet", "Number averaged scans",
-                          "Contralateral eye status", "Progression during study"], inplace=True)
+    # df_test.drop(columns=["Number previous visits", "Contralateral eye moths wet", "Number averaged scans",
+    #                       "Contralateral eye status", "Progression during study"], inplace=True)
     df_test["Patient name and eye"] = df_test["Patient name and eye"].astype(str)
     df_test["Patient number"] = df_test["Patient number"].astype(str)
     df_test = df_test.reset_index(drop=True)
     df_test = normalizing(df_test, 2)
+
     patients_vec_test, patients_label_test, Seq_len_test = testing_data(df_test, strm, slen)
     print("#test: ", len(patients_vec_test))
 

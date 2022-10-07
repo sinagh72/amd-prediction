@@ -2,3 +2,4 @@
 ./__pycache__
 weights/
 __pychache__/
+/lightning_logs/
