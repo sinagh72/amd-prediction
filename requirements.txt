@@ -1,4 +1,5 @@
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
 xlrd --upgrade
 pytorch-lightning
-kornia
+#kornia
+openpyxl
