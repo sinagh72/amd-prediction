@@ -3,3 +3,4 @@
 weights/
 __pychache__/
 /lightning_logs/
+/transformer/lightning_logs/
