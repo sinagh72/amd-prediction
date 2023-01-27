@@ -4,23 +4,23 @@ By using sequential visits (historical data) of a patient, we want to develop mo
 ## Data Preprocessing
 The data is initially indexed with fold numbers from 1 to 10. We used a five-fold CV. To convert 10 to 5, folds with the same raminder by 5 are put in the same fold.
 ### Padding
-1- pre padding
-2- post padding
+1. pre padding
+2. post padding
 
 ### Augmentation
-1- pyramid
-2- half pyramid
+1. pyramid
+2. half pyramid
 
 Assuming that a patient has 5 visits (each denoted by x), the pyramid augmentation approach would be as follows:
-0000x
-000xx
-00xxx
-0xxxx
-xxxxx
-0xxxx
-00xxx
-000xx
-0000x
++ 0000x
++ 000xx
++ 00xxx
++ 0xxxx
++ xxxxx
++ 0xxxx
++ 00xxx
++ 000xx
++ 0000x
 
 In the case of post padding, x and 0 would be switched
 half pyramid, means that we would have:0000x000xx00xxx0xxxxxxxxx
