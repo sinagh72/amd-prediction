@@ -59,4 +59,4 @@ A roc curve is created in the test session based on the prediction and ground tr
 5. AUC of 5-folds when LSTM layers have 30 units
 6. AUC of 5-folds when LSTM layers have 50 units
 
-Among the top 6, the one with the highest AUC is selected. In this way, we can understand what is the best value for the LSTMs' units. Then again, for each of them we have 5 different models and we choose the one with the highest auc. 
+Among the top 6, the one with the highest AUC is selected. In this way, we can understand what is the best value for the LSTMs' units. Then again, for the selected LSTM unit number, the 5 models correspond to the 5-folds are compred and the one with the highest AUC over the validation is picked for inference.
