@@ -23,7 +23,12 @@ Assuming that a patient has 5 visits (each denoted by x), the pyramid augmentati
 + 0000x
 
 In the case of post padding, x and 0 would be switched
-half pyramid, means that we would have:0000x000xx00xxx0xxxxxxxxx
+half pyramid, means that we would have:
+- 0000x
+- 000xx
+- 00xxx
+- 0xxxx
+- xxxxx
 
 Another technique that was used to replicate better the test set is dropping (convert all of them to zero) a percentage of the rows after augmentation. In any case the last row or the row containing all the visits of the patient would not be dropped. So if percentage is 20%, except the last row, others have probability of 20% to become all zeros.
 
@@ -31,12 +36,12 @@ In the example above the length of each data is 5, however for each month predic
 The validation data is only padded to be consistent.
 ## Loss function
 Two options were considered to be tested as a loss functions
-1- weighted categorical cross-entropy
-2- focal loss
+1. weighted categorical cross-entropy
+2. focal loss
 
 ## Optimizers
-1- Adam
-2- RMSprop
+1. Adam
+2. RMSprop
 
 ## LSTM Layer Unit numbers
 different number of units are tested for the two LSTM layers: 5, 10, 20, 25, 30, 50
