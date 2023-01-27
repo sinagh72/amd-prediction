@@ -2,7 +2,9 @@
 By using sequential visits (historical data) of a patient, we want to develop models that can predict whether or not a patient will develop AMD. For each of the historical data from 3, 6, 9, 12, 15, 18, 21 months, a model is trained using both LSTM and Transformers.
 
 ## Data Preprocessing
-The data is initially indexed with fold numbers from 1 to 10. We used a five-fold CV. To convert 10 to 5, folds with the same raminder by 5 are put in the same fold.
+The data is initially indexed with fold numbers from 1 to 10. We used a five-fold CV. To convert 10 to 5:
+1. two consequtive folds are merged
+2. folds with the same remainder of fold number by 5 are merged (remainder by 5)
 ### Padding
 1. pre padding
 2. post padding
