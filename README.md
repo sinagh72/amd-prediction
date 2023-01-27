@@ -47,9 +47,16 @@ Two options were considered to be tested as a loss functions
 different number of units are tested for the two LSTM layers: 5, 10, 20, 25, 30, 50
 
 ## Training Results
-For each prediction task (e.g. 3month, 5 month, etc), we would have 30 models (5 folds and 6 different LSTM models). Obviously, by adding the othercombinations such as loss function, droping percentage, this number increase a lot. After each training, the model weights of that particular task (3 months, 5 months, andetc), with the corresponding LSTM unit's number, fold's number, ground truth and prediction results over the validation set, and auc are stored. For instance:OCT_model_with_weights_12_25_1.h5
-corresponds to the model that is trained over the 12 months data, the LSTM layers units is 25 and the validation set was 1 whereas 2, 3, 4, 5 were used as the training. 
+For every prediction task (e.g. 3 months, 5 months, etc.), we would have 30 models (5 folds and 6 different LSTM models). This number increases a lot when other combinations are added, such as loss function and dropping percentage. A model weight for a particular task (3 months, 5 months, etc.) is stored, along with its corresponding LSTM unit number, fold number, and ground truth and prediction results over a validation set. As an example, OCT_model_with_weights_12_25_1.h5 represents the model trained over the 12 months of data. The LSTM layers are 25 and the validation set is 1, whereas the training set is 2, 3, 4, 5.
+ 
 
 ## Testing
-In the test session, the prediction and ground truth of five folds are used to create the roc curve and obtain auc. Since we have 6 different number of layers, we would have 6 distinct auc values: 1- auc of 5-folds when LSTM layers have 5 units2- auc of 5-folds when LSTM layers have 10 units3- auc of 5-folds when LSTM layers have 20 units4- auc of 5-folds when LSTM layers have 25 units5- auc of 5-folds when LSTM layers have 30 units6- auc of 5-folds when LSTM layers have 50 units
-Accordingly, the highest auc is chosen among the top 6. In this way, we can understand what is the best value for the LSTMs' units. Then again, for each of them we have 5 different models and we choose the one with the highest auc. 
+A roc curve is created in the test session based on the prediction and ground truth of five folds. There would be 6 distinct auc values since we have 6 different layers: 
+1. AUC of 5-folds when LSTM layers have 5 units
+2. AUC of 5-folds when LSTM layers have 10 units
+3. AUC of 5-folds when LSTM layers have 20 units
+4. AUC of 5-folds when LSTM layers have 25 units
+5. AUC of 5-folds when LSTM layers have 30 units
+6. AUC of 5-folds when LSTM layers have 50 units
+
+Among the top 6, the one with the highest AUC is selected. In this way, we can understand what is the best value for the LSTMs' units. Then again, for each of them we have 5 different models and we choose the one with the highest auc. 
