@@ -109,7 +109,7 @@ if __name__ == "__main__":
     # lr_precision, lr_recall, _ = precision_recall_curve(target, pred)
     # lr_auc = auc(lr_recall, lr_precision)
     #
-    # print('AUC and lr_AUC: ', roc_auc, lr_auc)
+    # print('3 months_auc.txt and lr_AUC: ', roc_auc, lr_auc)
     #
     # ## Plot teh ROC curve
     #

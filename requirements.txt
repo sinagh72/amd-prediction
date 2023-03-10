@@ -3,3 +3,10 @@ xlrd --upgrade
 pytorch-lightning
 #kornia
 openpyxl
+pandas
+matplotlib
+scikit-learn
+Keras-Preprocessing
+keras
+tensorflow
+mmcv
