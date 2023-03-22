@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import xlsxwriter as xlsxwriter
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from keras_preprocessing.sequence import pad_sequences
 import os
@@ -53,8 +54,36 @@ for m in mon:
     SLEN = pd.read_pickle(r'' + BASE_DIR + 'CV_resultsv2/HARBOR' + str(m) + 'mon_SLEN_' + str(f) + '.pickle')
     aucMesh = np.array(ROC_AUC).reshape(len(NN), len(FOLDS))
 
-    print('3 months_auc.txt values:')
-    print(aucMesh)
+    print(f'{m} month auc values:')
+    # print(aucMesh)
+    # my_df = pd.DataFrame(aucMesh)
+    # my_df.to_csv(f'{m} month auc values.xlsx', index=False, header=False)
+    fold_counter = 1
+    NN_counter = 0
+    for i in range(0, len(NN) * len(FOLDS)):
+
+        iyall = IY[i]
+        ipall = IP[i]
+        fpr, tpr, thresholds = roc_curve(iyall[iyall[:, 2] == 0, 1], ipall[iyall[:, 2] == 0, 1], pos_label=1)
+        roc_auc = auc(fpr, tpr)
+        plt.figure()
+        lw = 2
+        plt.plot(fpr, tpr, color='darkorange',
+                 lw=lw, label='ROC curve for ' + str(m) + 'months (area = %0.4f)' % roc_auc)
+
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([-0.01, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(f'ROC curve, fold = {fold_counter}, #LSTM = {NN[NN_counter]}')
+        plt.legend(loc="lower right")
+        # plt.show()
+        plt.savefig(f"../results/training results/ROC curves/{str(m)}_months_fold={fold_counter}_#LSTM={NN[NN_counter]}.png")
+        fold_counter += 1
+        if fold_counter % 5 == 1:
+            fold_counter = 1
+            NN_counter += 1
 
     # 3 months_auc.txt for NN configs over folds
     AUC_NN = []
@@ -68,7 +97,7 @@ for m in mon:
         AUC_NN.append(roc_auc)
         # print(roc_auc)
 
-    print('3 months_auc.txt over all folds for different NN configs', AUC_NN)
+    print('AUC over all folds for different NN configs', AUC_NN)
 
     ind = np.argmax(AUC_NN)
     best_NN = NN[ind]
